@@ -3,7 +3,7 @@ function gui_opened(event)
         global.name_id_table={}
     end
     local player=game.get_player(event.player_index)
-    if event.entity~=nil then
+    if event.entity~=nil and event.entity.name == "better-linked-chest" then
         if event.entity.name=="better-linked-chest" then
             global.blc_entity=event.entity
             if global.blc_entity~=nil then
@@ -94,7 +94,7 @@ end
 
 function gui_closed(event)
     local player=game.get_player(event.player_index)
-    if event.entity~=nil then
+    if event.entity~=nil and event.entity.name == "better-linked-chest" then
         if global.blc_entity.name=="better-linked-chest" then
             local screen_element=player.gui.relative.clear()
         end
