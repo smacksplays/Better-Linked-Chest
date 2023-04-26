@@ -2,101 +2,113 @@ function gui_opened(event)
     if global.name_id_table==nil then
         global.name_id_table={}
     end
+
     local player=game.get_player(event.player_index)
+    if player==nil then return end
+    local blc_frame=getBlcFrame(player)
+    local name_dropdown=getChild(player, "blc.name_dropdown")
+    local id_label=getChild(player, "blc.id_label")
+    local remove_button=getChild(player, "blc.remove_button")
+    local link_name_label=getChild(player, "blc.link_name_label")
+    local name_textfield=getChild(player, "blc.name_textfield")
+    local link_id_label=getChild(player, "blc.link_id_label")
+    local id_textfield=getChild(player, "blc.id_textfield")
+    local add_button=getChild(player, "blc.add_button")
+
     if event.entity~=nil and event.entity.name == "better-linked-chest" then
-        if event.entity.name=="better-linked-chest" then
-            global.blc_entity=event.entity
-            if global.blc_entity~=nil then
+        global.blc_entity=event.entity
+        if global.blc_entity~=nil then
+            if blc_frame==nil then
                 local gui_relative=player.gui.relative
-                    
                 -- gui_relative.children[1]
-                local id_frame=gui_relative.add{
+                blc_frame=gui_relative.add{
                     type="frame",
-                    name="blc.id_frame",
+                    name="blc.blc_frame",
                     direction="vertical",
-                    caption={"blc.id_frame_cap"},
+                    caption={"blc.blc_frame_cap"},
                     anchor={
                         gui=defines.relative_gui_type.linked_container_gui,
                         position=defines.relative_gui_position.right
                     }
                 }
-                -- id_frame.children[1]
-                local id_frame_dropdown=id_frame.add{
+                -- blc_frame.children[1]
+                name_dropdown=blc_frame.add{
                     type="drop-down",
-                    name="blc.id_frame_dropdown",
-                    caption={"blc.id_frame_dropdown_cap"}
+                    name="blc.name_dropdown",
+                    caption={"blc.name_dropdown_cap"}
                 }
-                -- id_frame.children[2]
-                local id_frame_dropdown_t=id_frame.add{
+                -- blc_frame.children[2]
+                id_label=blc_frame.add{
                     type="label",
-                    name="blc.id_frame_dropdown_t",
-                    caption="ID: --"
+                    name="blc.id_label",
+                    caption="ID:"
                 }
-                -- id_frame.children[3]
-                local id_frame_remove_b=id_frame.add{
+                -- blc_frame.children[3]
+                remove_button=blc_frame.add{
                     type="button",
-                    name="blc.id_frame_remove_b",
-                    caption={"blc.id_frame_remove_b_cap"}
+                    name="blc.remove_button",
+                    caption={"blc.remove_button_cap"}
                 }
-                -- gui_relative.children[2]
-                local setup_frame=gui_relative.add{
-                    type="frame",
-                    name="blc.setup_frame",
-                    direction="vertical",
-                    caption={"blc.setup_frame_cap"},
-                    anchor={
-                        gui=defines.relative_gui_type.linked_container_gui,
-                        position=defines.relative_gui_position.right
-                    }
-                }
-                -- setup_frame.children[1]
-                local setup_frame_name_l=setup_frame.add{
+                -- blc_frame.children[4]
+                link_name_label=blc_frame.add{
                     type="label",
-                    name="blc.setup_frame_name_l",
-                    caption={"blc.setup_frame_name_l_cap"}
+                    name="blc.link_name_label",
+                    caption={"blc.link_name_label_cap"}
                 }
-                -- setup_frame.children[2]
-                local setup_frame_name_t=setup_frame.add{
+                -- blc_frame.children[5]
+                name_textfield=blc_frame.add{
                     type="textfield",
-                    name="blc.setup_frame_name_t",
-                    caption={"blc.setup_frame_name_t_cap"}
+                    name="blc.name_textfield"
                 }
-                -- setup_frame.children[3]
-                local setup_frame_id_l=setup_frame.add{
+                -- blc_frame.children[6]
+                link_id_label=blc_frame.add{
                     type="label",
-                    name="blc.setup_frame_id_l",
-                    caption={"blc.setup_frame_id_l_cap"}
+                    name="blc.link_id_label",
+                    caption={"blc.link_id_label_cap"}
                 }
-                -- setup_frame.children[4]
-                local setup_frame_id_t=setup_frame.add{
+                -- blc_frame.children[7]
+                id_textfield=blc_frame.add{
                     type="textfield",
-                    name="blc.setup_frame_id_t",
-                    caption={"blc.setup_frame_id_t_cap"}
+                    name="blc.id_textfield"
                 }
-                -- setup_frame.children[5]
-                local setup_frame_add_b=setup_frame.add{
+                -- blc_frame.children[8]
+                add_button=blc_frame.add{
                     type="button",
-                    name="blc.setup_frame_add_b",
-                    caption={"blc.setup_frame_add_b_cap"}
-                } 
-        
-                fillDropdown(id_frame_dropdown)
-                if id_frame_dropdown.selected_index>0 then
-                    local sel_id=getSelectedID(id_frame_dropdown)
-                    id_frame_dropdown_t.caption="ID: "..sel_id
-                end
-                local first_free_id=getFirstFreeID()
-                setup_frame_id_t.text=""..first_free_id
+                    name="blc.add_button",
+                    caption={"blc.add_button_cap"}
+                }
             end
+            local table_size=0
+            for _ in pairs(global.name_id_table) do 
+                table_size=table_size+1
+            end
+            if(#(name_dropdown.items)==0 and table_size~=0) then
+                fillDropdown(name_dropdown)
+            end
+            if global.blc_entity.link_id==0 then
+                name_dropdown.selected_index=0
+                id_label.caption="ID: 0"
+            else
+                local index = getIndexById(name_dropdown)
+                name_dropdown.selected_index=index
+                id_label.caption="ID: "..global.blc_entity.link_id
+            end
+            local first_free_id=getFirstFreeID()
+            id_textfield.text=""..first_free_id
         end
     end
 end
 
 function gui_closed(event)
     local player=game.get_player(event.player_index)
+    if player==nil then return end
     if event.entity~=nil and event.entity.name == "better-linked-chest" then
         if global.blc_entity.name=="better-linked-chest" then
-            local screen_element=player.gui.relative.clear()
+            local blc_frame = getBlcFrame(player.gui.relative)
+            if blc_frame~=nil then
+                local name_dropdown=getChild(player, "blc.name_dropdown")
+                name_dropdown.close_dropdown()
+            end
         end
     end
 end
@@ -107,82 +119,74 @@ end
 
 function gui_click(event)
     local player=game.get_player(event.player_index)
+    if player==nil then return end
     local element=event.element
-    local gui_relative=player.gui.relative
-    if gui_relative.children~=nil then
-        local id_frame=gui_relative.children[1]
-        if id_frame~= nil and id_frame.name=="blc.id_frame" then
-            local id_frame_dropdown=id_frame.children[1]
-            local id_frame_dropdown_t=id_frame.children[2]
-            local setup_frame=gui_relative.children[2]
-            local setup_frame_name_t=setup_frame.children[2]
-            local setup_frame_id_t=setup_frame.children[4]
-    
-            if element.name=="blc.setup_frame_add_b" then
-                if isInteger(setup_frame_id_t.text) then
-                    local id = tonumber(setup_frame_id_t.text)
-                    if id > 4294967295 then
-                        player.print("ID can't be greater than 4,294,967,295!")
-                    elseif id==0 then
-                        player.print("ID can't be 0!")
-                        local first_free_id=getFirstFreeID()
-                        setup_frame_id_t.text=""..first_free_id
-                    else
-                        local isInTable=false
-                        for key,value in pairs(global.name_id_table) do
-                            if value==id then
-                                isInTable=true
-                                player.print("ID: "..id.." is alredy set with Name: " .. key)
-                            end
-                            if key==setup_frame_name_t.text then
-                                isInTable=true
-                                player.print("Name: "..setup_frame_name_t.text.." is alredy set with ID: " .. id)
-                            end
+    local blc_frame=getBlcFrame(player)
+    if blc_frame~=nil and blc_frame.name=="blc.blc_frame" then
+        local name_dropdown=getChild(player, "blc.name_dropdown")
+        local id_label=getChild(player, "blc.id_label")
+        local name_textfield=getChild(player, "blc.name_textfield")
+        local id_textfield=getChild(player, "blc.id_textfield")
+        if element.name=="blc.add_button" then
+            if isInteger(id_textfield.text) then
+                local id = tonumber(id_textfield.text)
+                if id > 4294967295 then
+                    player.print("Link ID can't be greater than 4,294,967,295!")
+                elseif id==0 then
+                    player.print("Link ID can't be 0!")
+                    local first_free_id=getFirstFreeID()
+                    id_textfield.text=""..first_free_id
+                else
+                    local isInTable=false
+                    for key,value in pairs(global.name_id_table) do
+                        if value==id then
+                            isInTable=true
+                            player.print("Link ID: "..id.." is alredy set with Link Name: " .. key)
                         end
-                        if isInTable==false then
-                            global.name_id_table[setup_frame_name_t.text]=id
-                            fillDropdown(id_frame_dropdown)
-                            setup_frame_name_t.text=""
-                            local first_free_id=getFirstFreeID()
-                            setup_frame_id_t.text=""..first_free_id
-                            if id_frame_dropdown.selected_index>0 then
-                                local sel_id=getSelectedID(id_frame_dropdown)
-                                id_frame_dropdown_t.caption="ID: "..sel_id
-                            end
+                        if key==name_textfield.text then
+                            isInTable=true
+                            player.print("Link Name: "..name_textfield.text.." is alredy set with Link ID: " .. id)
                         end
                     end
-                else
-                    player.print("ID has to be a positive integer!")
+                    if isInTable==false then
+                        global.name_id_table[name_textfield.text]=id
+                        fillDropdown(name_dropdown)
+                        name_textfield.text=""
+                        local first_free_id=getFirstFreeID()
+                        id_textfield.text=""..first_free_id
+                        if name_dropdown.selected_index>0 then
+                            local sel_id=getSelectedID(name_dropdown)
+                            id_label.caption="ID: "..sel_id
+                        end
+                    end
                 end
-            elseif element.name=="blc.id_frame_remove_b" then
-                removeDropdown(id_frame_dropdown,id_frame_dropdown_t)
-                local first_free_id=getFirstFreeID()
-                setup_frame_id_t.text=""..first_free_id
-            end 
+            else
+                player.print("Link ID has to be a positive integer!")
+            end
+        elseif element.name=="blc.remove_button"then
+            removeDropdown(name_dropdown,id_label)
+            local first_free_id=getFirstFreeID()
+            id_textfield.text=""..first_free_id
         end
     end
 end
 
 function gui_selection_state_changed(event)
     local player=game.get_player(event.player_index)
-    local gui_relative=player.gui.relative
-    if gui_relative.children~=nil then
-        local id_frame=gui_relative.children[1]
-        if id_frame~= nil and id_frame.name=="blc.id_frame" then
-            local id_frame_dropdown=id_frame.children[1]
-            local id_frame_dropdown_t=id_frame.children[2]
-            local element=event.element
-            if element.name=="blc.id_frame_dropdown" then
-                local selected_index=element.selected_index
-                local selected_item=element.get_item(selected_index)
-                if selected_index>0 then
-                    for key,value in pairs(global.name_id_table) do
-                        if selected_item==key then
-                            global.blc_entity.link_id=value
-                            local sel_id=getSelectedID(id_frame_dropdown)
-                            id_frame_dropdown_t.caption="ID: "..sel_id
-                        end
-                    end
+    if player==nil then return end
+    local element=event.element
+    local blc_frame=getBlcFrame(player)
+    if blc_frame~=nil and blc_frame.name=="blc.blc_frame" and element.name=="blc.name_dropdown" then
+        local name_dropdown=getChild(player, "blc.name_dropdown")
+        local id_label=getChild(player, "blc.id_label")
+        local selected_index=element.selected_index
+        local selected_item=element.get_item(selected_index)
+        if selected_index>0 then
+            for key,value in pairs(global.name_id_table) do
+                if selected_item==key then
+                    global.blc_entity.link_id=value
+                    local sel_id=getSelectedID(name_dropdown)
+                    id_label.caption="ID: "..sel_id
                 end
             end
         end
@@ -192,8 +196,35 @@ end
 function entity_settings_pasted(event)
     local player=game.get_player(event.player_index)
     if event.source~=nil and event.destination~=nil then
+        player.print("Source Name: "..event.source.name.." Dest Name: "..event.destination.name)
         if event.source.name=="better-linked-chest" and event.destination.name=="better-linked-chest" then
             event.destination.link_id=event.source.link_id
+        end
+    end
+end
+
+
+function getBlcFrame(player)
+    local children=player.gui.relative.children
+    if children~=nil then
+        for key,value in pairs(children) do
+            if value.name=="blc.blc_frame" then
+                return value
+            end
+        end
+    end
+end
+
+function getChild(player, name)
+    local blc_frame=getBlcFrame(player)
+    if blc_frame~=nil then
+        local children=blc_frame.children
+        if children~=nil then
+            for key,value in pairs(children) do
+                if value.name==name then
+                    return value
+                end
+            end
         end
     end
 end
@@ -212,21 +243,21 @@ function fillDropdown(dropdown)
     end
 end
 
-function removeDropdown(dropdown,dropdown_t)
+function removeDropdown(dropdown,label)
     local selected_id=dropdown.selected_index
     if selected_id>0 then
         local selected_item=dropdown.get_item(selected_id)
         global.name_id_table[selected_item]=nil
         fillDropdown(dropdown)
         global.blc_entity.link_id=0
-        dropdown_t.caption="ID: --"
+        label.caption="ID: --"
     end
 end
 
 function getSelectedID(dropdown)
-    local selected_id=dropdown.selected_index
-    if selected_id>0 then
-        local selected_item=dropdown.get_item(selected_id)
+    local selected_index=dropdown.selected_index
+    if selected_index>0 then
+        local selected_item=dropdown.get_item(selected_index)
         for key,value in pairs(global.name_id_table) do
             if key==selected_item then
                 return value
@@ -245,6 +276,24 @@ function getFirstFreeID()
             end
         end
         if isInTable==false then
+            return i
+        end
+    end
+end
+
+function getNamebyId(id)
+    for key,value in pairs(global.name_id_table) do
+        if value==id then
+            return key
+        end
+    end
+    return "--"
+end
+
+function getIndexById(dropdown)
+    local name=getNamebyId(global.blc_entity.link_id)
+    for i, item in ipairs(dropdown.items) do
+        if item==name then
             return i
         end
     end

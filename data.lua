@@ -22,6 +22,7 @@ betterlinkedchest.picture.layers[1].hr_version.height=128
 betterlinkedchest.picture.layers[1].hr_version.scale=0.3
 
 betterlinkedchest.gui_mode = "none"
+betterlinkedchest.corpse=""
 
 
 data:extend({
