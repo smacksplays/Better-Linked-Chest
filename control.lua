@@ -194,9 +194,7 @@ function gui_selection_state_changed(event)
 end
 
 function entity_settings_pasted(event)
-    local player=game.get_player(event.player_index)
     if event.source~=nil and event.destination~=nil then
-        player.print("Source Name: "..event.source.name.." Dest Name: "..event.destination.name)
         if event.source.name=="better-linked-chest" and event.destination.name=="better-linked-chest" then
             event.destination.link_id=event.source.link_id
         end
