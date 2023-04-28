@@ -6,17 +6,20 @@ function gui_opened(event)
 
     local player=game.get_player(event.player_index)
     if player==nil then return end
-    local blc_frame=getBlcFrame(player)
-    local name_dropdown=getChild(player, "blc.name_dropdown")
-    local id_label=getChild(player, "blc.id_label")
-    local remove_button=getChild(player, "blc.remove_button")
-    local link_name_label=getChild(player, "blc.link_name_label")
-    local name_textfield=getChild(player, "blc.name_textfield")
-    local link_id_label=getChild(player, "blc.link_id_label")
-    local id_textfield=getChild(player, "blc.id_textfield")
-    local add_button=getChild(player, "blc.add_button")
 
     if event.entity~=nil and event.entity.name == "better-linked-chest" then
+
+        local blc_frame=getBlcFrame(player)
+        local name_dropdown=getChild(player, "blc.name_dropdown")
+        local id_label=getChild(player, "blc.id_label")
+        local remove_button=getChild(player, "blc.remove_button")
+        local link_name_label=getChild(player, "blc.link_name_label")
+        local name_textfield=getChild(player, "blc.name_textfield")
+        local link_id_label=getChild(player, "blc.link_id_label")
+        local id_textfield=getChild(player, "blc.id_textfield")
+        local add_button=getChild(player, "blc.add_button")
+        local choose_elem_button=getChild(player, "blc.choose_elem_button")
+
         global.blc_entity=event.entity
         if global.blc_entity~=nil then
             if blc_frame==nil then
@@ -32,47 +35,72 @@ function gui_opened(event)
                         position=defines.relative_gui_position.right
                     }
                 }
+            end
+            if name_dropdown==nil then
                 -- blc_frame.children[1]
                 name_dropdown=blc_frame.add{
                     type="drop-down",
                     name="blc.name_dropdown",
                     caption={"blc.name_dropdown_cap"}
                 }
+            end
+            if id_label==nil then
                 -- blc_frame.children[2]
                 id_label=blc_frame.add{
                     type="label",
                     name="blc.id_label",
                     caption="ID:"
                 }
+            end
+            if remove_button==nil then
                 -- blc_frame.children[3]
                 remove_button=blc_frame.add{
                     type="button",
                     name="blc.remove_button",
                     caption={"blc.remove_button_cap"}
                 }
+            end
+            if link_name_label==nil then
                 -- blc_frame.children[4]
                 link_name_label=blc_frame.add{
                     type="label",
                     name="blc.link_name_label",
                     caption={"blc.link_name_label_cap"}
                 }
+            end
+            if name_textfield==nil then
                 -- blc_frame.children[5]
                 name_textfield=blc_frame.add{
                     type="textfield",
                     name="blc.name_textfield"
                 }
+            end
+            if choose_elem_button==nil then
                 -- blc_frame.children[6]
+                choose_elem_button=blc_frame.add{
+                    type="choose-elem-button",
+                    name="blc.elem_button",
+                    style="slot_button",
+                    elem_type="item"
+                }
+            end
+            if link_id_label==nil then
+                -- blc_frame.children[7]
                 link_id_label=blc_frame.add{
                     type="label",
                     name="blc.link_id_label",
                     caption={"blc.link_id_label_cap"}
                 }
-                -- blc_frame.children[7]
+            end
+            if id_textfield==nil then
+                -- blc_frame.children[8]
                 id_textfield=blc_frame.add{
                     type="textfield",
                     name="blc.id_textfield"
                 }
-                -- blc_frame.children[8]
+            end
+            if add_button==nil then
+                -- blc_frame.children[9]
                 add_button=blc_frame.add{
                     type="button",
                     name="blc.add_button",
@@ -230,9 +258,25 @@ function pre_build(event)
                 entity.link_id=e.link_id
             end
         end
-    else
-    
     end
+end
+
+function gui_elem_changed(event)
+    local player=game.get_player(event.player_index)
+    if player==nil then return end
+    local element=event.element
+    local blc_frame=getBlcFrame(player)
+    if blc_frame~=nil then
+        local name_textfield=getChild(player, "blc.name_textfield")
+        if name_textfield~=nil then
+            local name=element.elem_value
+            if name~=nil then
+                name = name:gsub("(%l)(%w+)", function(a,b) return string.upper(a)..b end)
+                name_textfield.text=name
+            end
+        end
+    end
+
 end
 
 function getBlcFrame(player)
@@ -364,3 +408,5 @@ script.on_event(defines.events.on_gui_click, gui_click)
 script.on_event(defines.events.on_gui_selection_state_changed, gui_selection_state_changed)
 script.on_event(defines.events.on_entity_settings_pasted, entity_settings_pasted) 
 script.on_event(defines.events.on_pre_build, pre_build)
+script.on_event(defines.events.on_gui_elem_changed, gui_elem_changed)
+
