@@ -1,3 +1,4 @@
+local func_blueprint = require("util/blueprint")
 function gui_opened(event)
     if global.name_id_table==nil then
         global.name_id_table={}
@@ -89,7 +90,7 @@ function gui_opened(event)
                 name_dropdown.selected_index=0
                 id_label.caption="ID: 0"
             else
-                local index = getIndexById(name_dropdown)
+                local index = getIndexByGlobalId(name_dropdown)
                 name_dropdown.selected_index=index
                 id_label.caption="ID: "..global.blc_entity.link_id
             end
@@ -136,6 +137,8 @@ function gui_click(event)
                     player.print("Link ID can't be 0!")
                     local first_free_id=getFirstFreeID()
                     id_textfield.text=""..first_free_id
+                elseif name_textfield.text=="" then
+                    player.print("Link Name can't be empty!")
                 else
                     local isInTable=false
                     for key,value in pairs(global.name_id_table) do
@@ -157,6 +160,10 @@ function gui_click(event)
                         if name_dropdown.selected_index>0 then
                             local sel_id=getSelectedID(name_dropdown)
                             id_label.caption="ID: "..sel_id
+                        else
+                            local index=getIndexById(name_dropdown, id)
+                            name_dropdown.selected_index=index
+                            id_label.caption="ID: "..id
                         end
                     end
                 end
@@ -201,6 +208,33 @@ function entity_settings_pasted(event)
     end
 end
 
+function pre_build(event)
+    local player=game.get_player(event.player_index)
+    local surface=player.surface
+    local cursor=player.cursor_stack
+    local paste_position=event.position
+
+    if player.is_cursor_blueprint() then
+        local blueprint
+        if cursor.is_blueprint_book then
+            book=cursor
+            blueprint=book[book.active_index]
+        else
+            blueprint=cursor
+        end
+        local original_entities = blueprint.get_blueprint_entities()
+        local blueprint_entities = func_blueprint(original_entities, event)
+        if blueprint_entities==nil then player.print("nil") end
+        for i,e in ipairs(blueprint_entities) do
+            local entity = surface.find_entity("better-linked-chest", e.position)
+            if entity~=nil then
+                entity.link_id=original_entities[i].link_id
+            end
+        end
+    else
+    
+    end
+end
 
 function getBlcFrame(player)
     local children=player.gui.relative.children
@@ -229,6 +263,7 @@ end
 
 function fillDropdown(dropdown)
     dropdown.clear_items()
+    sortTableByName()
     local i = 1
     for key,value in pairs(global.name_id_table) do
         dropdown.add_item(key)
@@ -239,6 +274,15 @@ function fillDropdown(dropdown)
         end
         i=i+1
     end
+end
+
+function sortTableByName()
+    local tkeys={}
+    local newTab={}
+    for k in pairs(global.name_id_table) do table.insert(tkeys, k) end
+    table.sort(tkeys)
+    for _,k in ipairs(tkeys) do newTab[k]=global.name_id_table[k] end
+    global.name_id_table=newTab
 end
 
 function removeDropdown(dropdown,label)
@@ -266,7 +310,7 @@ function getSelectedID(dropdown)
 end
 
 function getFirstFreeID()
-    for i=1, 100, 1 do
+    for i=1, 4294967295, 1 do
         isInTable=false
         for key,value in pairs(global.name_id_table) do
             if value==i then
@@ -288,8 +332,26 @@ function getNamebyId(id)
     return "--"
 end
 
-function getIndexById(dropdown)
+function getIdbyName(name)
+    for key,value in pairs(global.name_id_table) do
+        if key==name then
+            return value
+        end
+    end
+    return ""
+end
+
+function getIndexByGlobalId(dropdown)
     local name=getNamebyId(global.blc_entity.link_id)
+    for i, item in ipairs(dropdown.items) do
+        if item==name then
+            return i
+        end
+    end
+end
+
+function getIndexById(dropdown, id)
+    local name=getNamebyId(id)
     for i, item in ipairs(dropdown.items) do
         if item==name then
             return i
@@ -301,5 +363,5 @@ script.on_event(defines.events.on_gui_opened , gui_opened)
 script.on_event(defines.events.on_gui_closed , gui_closed)
 script.on_event(defines.events.on_gui_click, gui_click)
 script.on_event(defines.events.on_gui_selection_state_changed, gui_selection_state_changed)
-script.on_event(defines.events.on_entity_settings_pasted, entity_settings_pasted)
- 
+script.on_event(defines.events.on_entity_settings_pasted, entity_settings_pasted) 
+script.on_event(defines.events.on_pre_build, pre_build)

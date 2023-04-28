@@ -23,9 +23,12 @@ betterlinkedchest.picture.layers[1].hr_version.scale=0.3
 
 betterlinkedchest.gui_mode = "none"
 betterlinkedchest.corpse=""
+betterlinkedchest.fast_replaceable_group="container"
+betterlinkedchest.collision_box={{-0.25,-0.25},{0.25,0.25}}
 
 
-data:extend({
+data:extend(
+  {
   betterlinkedchest,
   {
     type = "item",
@@ -65,39 +68,5 @@ data:extend({
     order = "a-b-b",
   },
 })
-
-
-local styles = data.raw["gui-style"].default
-
-styles["blc_content_frame"] = {
-    type = "frame_style",
-    parent = "inside_shallow_frame_with_padding",
-    vertically_stretchable = "on"
-}
-
-styles["blc_controls_flow"] = {
-    type = "horizontal_flow_style",
-    vertical_align = "center",
-    horizontal_spacing = 16
-}
-
-styles["blc_controls_textfield"] = {
-    type = "textbox_style",
-    width = 36
-}
-
-styles["blc_deep_frame"] = {
-    type = "frame_style",
-    parent = "slot_button_deep_frame",
-    vertically_stretchable = "on",
-    horizontally_stretchable = "on",
-    top_margin = 16,
-    left_margin = 8,
-    right_margin = 8,
-    bottom_margin = 4
-}
-
-
-
 
 --table.insert(data.raw["technology"]["automation"].effects, { type = "unlock-recipe", recipe = "better-linked-chest" } )
