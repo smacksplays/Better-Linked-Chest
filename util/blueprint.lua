@@ -116,7 +116,8 @@ local function direction_to_vector(direction)
         name = entity.name,
         position = position,
         direction = direction,
-        items = entity.items
+        items = entity.items,
+        link_id = entity.link_id
       })
   
       local collision_box = game.entity_prototypes[entity.name].collision_box
@@ -152,7 +153,8 @@ local function direction_to_vector(direction)
             x = entity.position.x + alignX,
             y = entity.position.y + alignY,
           },
-          direction = entity.direction
+          direction = entity.direction,
+          link_id = entity.link_id
         })
       end
     end

@@ -224,11 +224,10 @@ function pre_build(event)
         end
         local original_entities = blueprint.get_blueprint_entities()
         local blueprint_entities = func_blueprint(original_entities, event)
-        if blueprint_entities==nil then player.print("nil") end
         for i,e in ipairs(blueprint_entities) do
             local entity = surface.find_entity("better-linked-chest", e.position)
             if entity~=nil then
-                entity.link_id=original_entities[i].link_id
+                entity.link_id=e.link_id
             end
         end
     else
