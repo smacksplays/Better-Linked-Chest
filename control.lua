@@ -79,7 +79,7 @@ function gui_opened(event)
                 -- blc_frame.children[6]
                 choose_elem_button=blc_frame.add{
                     type="choose-elem-button",
-                    name="blc.elem_button",
+                    name="blc.choose_elem_button",
                     style="slot_button",
                     elem_type="item"
                 }
@@ -111,7 +111,7 @@ function gui_opened(event)
             for _ in pairs(global.name_id_table) do 
                 table_size=table_size+1
             end
-            if(#(name_dropdown.items)==0 and table_size~=0) then
+            if table_size~=0 then
                 fillDropdown(name_dropdown)
             end
             if global.blc_entity.link_id==0 then
@@ -156,6 +156,7 @@ function gui_click(event)
         local id_label=getChild(player, "blc.id_label")
         local name_textfield=getChild(player, "blc.name_textfield")
         local id_textfield=getChild(player, "blc.id_textfield")
+        local choose_elem_button=getChild(player, "blc.choose_elem_button")
         if element.name=="blc.add_button" then
             if isInteger(id_textfield.text) then
                 local id = tonumber(id_textfield.text)
@@ -192,6 +193,9 @@ function gui_click(event)
                             local index=getIndexById(name_dropdown, id)
                             name_dropdown.selected_index=index
                             id_label.caption="ID: "..id
+                        end
+                        if choose_elem_button.elem_value~=nil then
+                            choose_elem_button.elem_value=nil
                         end
                     end
                 end
@@ -246,7 +250,8 @@ function pre_build(event)
         local blueprint
         if cursor.is_blueprint_book then
             book=cursor
-            blueprint=book[book.active_index]
+            items=book.get_inventory(defines.inventory.item_main)
+            blueprint=items[book.active_index]
         else
             blueprint=cursor
         end
@@ -263,6 +268,7 @@ end
 
 function gui_elem_changed(event)
     local player=game.get_player(event.player_index)
+    player.print(event.element.elem_value)
     if player==nil then return end
     local element=event.element
     local blc_frame=getBlcFrame(player)
@@ -273,6 +279,14 @@ function gui_elem_changed(event)
             if name~=nil then
                 name = name:gsub("(%l)(%w+)", function(a,b) return string.upper(a)..b end)
                 name_textfield.text=name
+                for key,value in pairs(global.name_id_table) do
+                    if name==key then
+                        player.print("found: k "..key.." v "..value)
+                        global.blc_entity.link_id=value
+                        fillDropdown(getChild(player, "blc.name_dropdown"))
+                        element.elem_value=nil
+                    end
+                end
             end
         end
     end
@@ -306,9 +320,14 @@ end
 
 function fillDropdown(dropdown)
     dropdown.clear_items()
-    sortTableByName()
+    local tkeys={}
+    local newTab={}
+    for k in pairs(global.name_id_table) do table.insert(tkeys, k) end
+    table.sort(tkeys)
+    for _,k in ipairs(tkeys) do newTab[k]=global.name_id_table[k] end
+    global.name_id_table=newTab
     local i = 1
-    for key,value in pairs(global.name_id_table) do
+    for key,value in pairs(newTab) do
         dropdown.add_item(key)
         if global.blc_entity.link_id~=0 then
             if value==global.blc_entity.link_id then
