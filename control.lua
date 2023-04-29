@@ -29,7 +29,6 @@ function gui_opened(event)
         global.blc_entity=event.entity
         if global.blc_entity~=nil then
             if blc_frame==nil then
-                player.print("new gui creating")
                 local gui_relative=player.gui.relative
                 -- gui_relative.children[1]
                 blc_frame=gui_relative.add{
@@ -275,7 +274,6 @@ end
 
 function gui_elem_changed(event)
     local player=game.get_player(event.player_index)
-    player.print(event.element.elem_value)
     if player==nil then return end
     local element=event.element
     local blc_frame=getBlcFrame(player)
@@ -288,9 +286,10 @@ function gui_elem_changed(event)
                 name_textfield.text=name
                 for key,value in pairs(global.name_id_table) do
                     if name==key then
-                        player.print("found: k "..key.." v "..value)
                         global.blc_entity.link_id=value
                         fillDropdown(getChild(player, "blc.name_dropdown"))
+                        local id_label=getChild(player, "blc.id_label")
+                        id_label.caption="ID "..value
                         element.elem_value=nil
                     end
                 end
