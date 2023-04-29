@@ -1,6 +1,13 @@
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.7
 Date: 2023-04
+  Info:
+    - Debug Code removed
+    - Fixed Choose Element Button selection
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 2023-04
   Feature:
     - Migration script for gui changes in 1.0.6 added
 
