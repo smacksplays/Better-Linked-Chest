@@ -1,0 +1,1 @@
+global.reset_blc_gui=true

@@ -10,6 +10,12 @@ function gui_opened(event)
     if event.entity~=nil and event.entity.name == "better-linked-chest" then
 
         local blc_frame=getBlcFrame(player)
+        if global.reset_blc_gui==true and blc_frame~=nil then
+            global.reset_blc_gui=false
+            blc_frame.destroy()
+        end
+        local blc_frame=getBlcFrame(player)
+
         local name_dropdown=getChild(player, "blc.name_dropdown")
         local id_label=getChild(player, "blc.id_label")
         local remove_button=getChild(player, "blc.remove_button")
@@ -23,6 +29,7 @@ function gui_opened(event)
         global.blc_entity=event.entity
         if global.blc_entity~=nil then
             if blc_frame==nil then
+                player.print("new gui creating")
                 local gui_relative=player.gui.relative
                 -- gui_relative.children[1]
                 blc_frame=gui_relative.add{
