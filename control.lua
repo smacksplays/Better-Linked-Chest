@@ -195,10 +195,12 @@ function gui_click(event)
                         if name_dropdown.selected_index>0 then
                             local sel_id=getSelectedID(name_dropdown)
                             id_label.caption="ID: "..sel_id
+                            global.blc_entity.link_id=sel_id
                         else
                             local index=getIndexById(name_dropdown, id)
                             name_dropdown.selected_index=index
                             id_label.caption="ID: "..id
+                            global.blc_entity.link_id=id
                         end
                         if choose_elem_button.elem_value~=nil then
                             choose_elem_button.elem_value=nil
