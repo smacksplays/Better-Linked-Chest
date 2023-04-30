@@ -125,7 +125,9 @@ function gui_opened(event)
                 id_label.caption="ID: 0"
             else
                 local index = getIndexByGlobalId(name_dropdown)
-                name_dropdown.selected_index=index
+                if index~=nil then
+                    name_dropdown.selected_index=index
+                end
                 id_label.caption="ID: "..global.blc_entity.link_id
             end
             local first_free_id=getFirstFreeID()
@@ -192,16 +194,12 @@ function gui_click(event)
                         name_textfield.text=""
                         local first_free_id=getFirstFreeID()
                         id_textfield.text=""..first_free_id
-                        if name_dropdown.selected_index>0 then
-                            local sel_id=getSelectedID(name_dropdown)
-                            id_label.caption="ID: "..sel_id
-                            global.blc_entity.link_id=sel_id
-                        else
-                            local index=getIndexById(name_dropdown, id)
-                            name_dropdown.selected_index=index
-                            id_label.caption="ID: "..id
-                            global.blc_entity.link_id=id
-                        end
+                        
+                        local index=getIndexById(name_dropdown, id)
+                        name_dropdown.selected_index=index
+                        id_label.caption="ID: "..id
+                        global.blc_entity.link_id=id
+                        
                         if choose_elem_button.elem_value~=nil then
                             choose_elem_button.elem_value=nil
                         end
@@ -255,16 +253,8 @@ function pre_build(event)
     local paste_position=event.position
 
     if player.is_cursor_blueprint() then
-        local blueprint
-        if cursor.is_blueprint_book then
-            book=cursor
-            items=book.get_inventory(defines.inventory.item_main)
-            blueprint=items[book.active_index]
-        else
-            blueprint=cursor
-        end
-        local original_entities = blueprint.get_blueprint_entities()
-        local blueprint_entities = func_blueprint(original_entities, event)
+        local original_entities=player.get_blueprint_entities()
+        local blueprint_entities=func_blueprint(original_entities, event, player)
         for i,e in ipairs(blueprint_entities) do
             local entity = surface.find_entity("better-linked-chest", e.position)
             if entity~=nil then

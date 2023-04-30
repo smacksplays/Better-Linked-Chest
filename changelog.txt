@@ -1,5 +1,18 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.7
+Version: 1.0.10
+Date: 2023-04
+  Bugfix:
+    - Autoselect with add button fixed
+    - Pasting blueprints from blueprint library fixed
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+Date: 2023-04
+  Bugfix:
+    - Autoselect with add button fixed
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.8
 Date: 2023-04
   Info:
     - Debug Code removed
