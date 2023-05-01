@@ -274,7 +274,7 @@ function gui_elem_changed(event)
         if name_textfield~=nil then
             local name=element.elem_value
             if name~=nil then
-                name = name:gsub("(%l)(%w+)", function(a,b) return string.upper(a)..b end)
+                name = name:gsub("%f[%a].", string.upper)
                 name_textfield.text=name
                 for key,value in pairs(global.name_id_table) do
                     if name==key then
