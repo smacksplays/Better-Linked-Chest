@@ -274,6 +274,9 @@ function gui_elem_changed(event)
         if name_textfield~=nil then
             local name=element.elem_value
             if name~=nil then
+                if type(name)=="table" then
+                    name=name.name
+                end
                 name = name:gsub("%f[%a].", string.upper)
                 name_textfield.text=name
                 for key,value in pairs(global.name_id_table) do
@@ -281,7 +284,7 @@ function gui_elem_changed(event)
                         global.blc_entity.link_id=value
                         fillDropdown(getChild(player, "blc.name_dropdown"))
                         local id_label=getChild(player, "blc.id_label")
-                        id_label.caption="ID "..value
+                        id_label.caption="ID: "..value
                         element.elem_value=nil
                     end
                 end
