@@ -169,23 +169,25 @@ function gui_click(event)
             if isInteger(id_textfield.text) then
                 local id = tonumber(id_textfield.text)
                 if id > 4294967295 then
-                    player.print("Link ID can't be greater than 4,294,967,295!")
+                    player.print({"blc.id_to_big"})
                 elseif id==0 then
-                    player.print("Link ID can't be 0!")
+                    local test={"blc.id_zero"}
+                    player.print(test)
+                    player.print({"blc.id_zero"})
                     local first_free_id=getFirstFreeID()
                     id_textfield.text=""..first_free_id
                 elseif name_textfield.text=="" then
-                    player.print("Link Name can't be empty!")
+                    player.print({"blc.name_empty"})
                 else
                     local isInTable=false
                     for key,value in pairs(global.name_id_table) do
                         if value==id then
                             isInTable=true
-                            player.print("Link ID: "..id.." is alredy set with Link Name: " .. key)
+                            player.print({"blc.id_alredy_set_1", id, key})
                         end
                         if key==name_textfield.text then
                             isInTable=true
-                            player.print("Link Name: "..name_textfield.text.." is alredy set with Link ID: " .. id)
+                            player.print({"blc.name_alredy_set_1", name_textfield.text, id})
                         end
                     end
                     if isInTable==false then
