@@ -4,8 +4,8 @@ data:extend({
 		name = "better-linked-chest-inventory-size",
 		order = "c",
 		setting_type = "startup",
-		default_value = 64,
-		minimum_value = 0,
+		default_value = 120,
+		minimum_value = 10,
 		maximum_value = 4069,
     },
     {
