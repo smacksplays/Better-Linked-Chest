@@ -14,6 +14,11 @@ data:extend({
         setting_type = "startup",
         default_value = "chemical",
         allowed_values = { "automation", "logistic", "chemical", "production", "utility", "space" },
+        --[[
+
+        default_value = {"setting.chemical"},
+        allowed_values = { {"setting.automation"}, {"setting.logistic"}, {"setting.chemical"}, {"setting.production"}, {"setting.utility"}, {"setting.space"} },
+        ]]--
     },
     {
         type = "string-setting",
