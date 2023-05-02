@@ -2,7 +2,8 @@
 Version: 1.0.12
 Date: 2023-05
   Feature:
-    - Added Settings for Reserach tier, Crafting cost and Inventory size 
+    - Added Settings for Reserach tier, Crafting cost and Inventory size
+    - Added German translation
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.11
