@@ -25,6 +25,7 @@ function gui_opened(event)
         local id_textfield=getChild(player, "blc.id_textfield")
         local add_button=getChild(player, "blc.add_button")
         local choose_elem_button=getChild(player, "blc.choose_elem_button")
+        local test_dropdown=getChild(player, "blc.test_dropdown")
 
         global.blc_entity=event.entity
         if global.blc_entity~=nil then
@@ -113,6 +114,15 @@ function gui_opened(event)
                     caption={"blc.add_button_cap"}
                 }
             end
+            if test_dropdown==nil then
+                -- blc_frame.children[1]
+                test_dropdown=blc_frame.add{
+                    type="drop-down",
+                    name="blc.test_dropdown",
+                    caption={"blc.test_dropdown_cap"}
+                }
+            end
+            test_dropdown.clear_items()
             local table_size=0
             for _ in pairs(global.name_id_table) do 
                 table_size=table_size+1
@@ -165,6 +175,7 @@ function gui_click(event)
         local name_textfield=getChild(player, "blc.name_textfield")
         local id_textfield=getChild(player, "blc.id_textfield")
         local choose_elem_button=getChild(player, "blc.choose_elem_button")
+        local test_dropdown=getChild(player, "blc.test_dropdown")
         if element.name=="blc.add_button" then
             if isInteger(id_textfield.text) then
                 local id = tonumber(id_textfield.text)
@@ -189,6 +200,14 @@ function gui_click(event)
                             isInTable=true
                             player.print({"blc.name_alredy_set_1", name_textfield.text, id})
                         end
+                    end
+                    player.print(name_textfield.text)
+                    local str=game.item_prototypes[string.lower(name_textfield.text)].localised_name[1]
+                    if str~=nil then
+                        player.print(str)
+                        test_dropdown.add_item({str})
+                    else
+                        test_dropdown.add_item(name_textfield.text)
                     end
                     if isInTable==false then
                         global.name_id_table[name_textfield.text]=id
@@ -256,11 +275,19 @@ function pre_build(event)
 
     if player.is_cursor_blueprint() then
         local original_entities=player.get_blueprint_entities()
-        local blueprint_entities=func_blueprint(original_entities, event, player)
-        for i,e in ipairs(blueprint_entities) do
-            local entity = surface.find_entity("better-linked-chest", e.position)
-            if entity~=nil then
-                entity.link_id=e.link_id
+        local contains_blc=false
+        for i,e in iparis(original_entities) do
+            if e.name=="better-linked-chest" then
+                contains_blc=true
+            end
+        end
+        if contains_blc==true then
+            local blueprint_entities=func_blueprint(original_entities, event, player)
+            for i,e in ipairs(blueprint_entities) do
+                local entity = surface.find_entity("better-linked-chest", e.position)
+                if entity~=nil then
+                    entity.link_id=e.link_id
+                end
             end
         end
     end
@@ -279,7 +306,7 @@ function gui_elem_changed(event)
                 if type(name)=="table" then
                     name=name.name
                 end
-                name = name:gsub("%f[%a].", string.upper)
+                name=name:gsub("%f[%a].", string.upper)
                 name_textfield.text=name
                 for key,value in pairs(global.name_id_table) do
                     if name==key then
