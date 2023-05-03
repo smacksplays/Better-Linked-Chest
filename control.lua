@@ -196,16 +196,12 @@ function gui_click(event)
                     if isInTable==false then
                         local str=game.item_prototypes[string.lower(name_textfield.text)]
                         if str~=nil then
-                            str=str.localised_name[1]
-                            if loc_param1==nil and loc_param2==nil then
-                                global.name_id_table[name_textfield.text]={id, str}
-                            elseif loc_param1~=nil and loc_param2==nil then
-                                global.name_id_table[name_textfield.text]={id, str, loc_param1}
-                            elseif loc_param1~=nil and loc_param2~=nil then
-                                global.name_id_table[name_textfield.text]={id, str, loc_param1, loc_param2}
-                            end
+                            -- Entries that have been added using the choose elem button
+                            loc_string=localised_string(str, name_textfield.text)
+                            global.name_id_table[name_textfield.text]={id, loc_string}
                         else
-                            global.name_id_table[name_textfield.text]={id, nil}
+                            -- Entires with custom names
+                            global.name_id_table[name_textfield.text]={id, name_textfield.text}
                         end
                         id_label.caption="ID: "..id
                         global.blc_entity.link_id=id
@@ -353,22 +349,13 @@ function fillDropdown(dropdown)
     local i = 1
     for key,value in pairs(newTab) do
         if value[2]~=nil then
-            if value[3]~=nil and value[4]~=nil then
-                dropdown.add_item({value[2], value[3], value[4]})
-            elseif value[3]~=nil and value[4]==nil then
-                dropdown.add_item({value[2], value[3]})
-            else
-                dropdown.add_item({value[2]})
-            end
+            dropdown.add_item(value[2])
         else
             dropdown.add_item(key)
         end
-        if global.blc_entity.link_id~=0 then
-            if value[1]==global.blc_entity.link_id then
-                dropdown.selected_index=i
-            end
+        if global.blc_entity.link_id ~= 0 and global.blc_entity.link_id==value[1] then
+            dropdown.selected_index=i
         end
-        i=i+1
     end
 end
 
@@ -398,28 +385,7 @@ function getSelectedID(dropdown, player)
     if selected_index>0 then
         local selected_item=dropdown.get_item(selected_index)
         for key,value in pairs(global.name_id_table) do
-        end
-        for key,value in pairs(global.name_id_table) do
-            local str=game.item_prototypes[string.lower(key)]
-            if str~=nil then
-                str=str.localised_name[1]
-            end
-            if selected_item[2]~=nil and selected_item[3]~=nil and value[3]~=nil then
-                if selected_item[2]==value[3] and selected_item[3]==value[4] then
-                    return value[1] 
-                end
-                if selected_item[2]==value[3] and value[4]==nil then
-                    return value[1] 
-                end
-            elseif selected_item[2]~=nil and value[3]~=nil then
-                if selected_item[2]==value[3] then 
-                    return value[1]
-                end
-            elseif string.lower(key)==selected_item[1] then
-                return value[1]
-            elseif str==selected_item[1] then
-                return value[1]
-            end
+            if localised_name_equal(key, value[2], selected_item)==true then return value[1] end
         end
     end
     return "--"
@@ -457,15 +423,6 @@ function getLocNamebyId(id)
     return "--"
 end
 
-function getIdbyName(name)
-    for key,value in pairs(global.name_id_table) do
-        if key==name then
-            return value[1]
-        end
-    end
-    return ""
-end
-
 function getIndexByGlobalId(dropdown)
     local name=getNamebyId(global.blc_entity.link_id)
     local localised_name=getLocNamebyId(global.blc_entity.link_id)
@@ -481,37 +438,57 @@ end
 function getIndexById(dropdown, id)
     local name=getNamebyId(id)
     for i, item in ipairs(dropdown.items) do
-        value=global.name_id_table[name]
-        if item[1]==name then
-            return i
-        elseif item[1]==value[2] then
+        local value=global.name_id_table[name]
+        if localised_name_equal(name, value[2], item) then
             return i
         end
     end
 end
 
-function localised_param(str, name, index)
-    local name_str={}
-    local i=0
-    if str=="item-name.textplate" then
-        name_lower=string.lower(name)
-        local t={}
-        for str1 in string.gmatch(name_lower, "-(%w+)") do
-                table.insert(t, str1)
+function localised_string(str, key)
+    str=str.localised_name
+    if str[1]~=nil and str[2]==nil and str[3]==nil then
+        return {str[1]}
+    elseif str[1]~=nil and str[2]~=nil and str[3]==nil then
+        if type(str[2])=="table" then
+            return {str[1], {str[2][1]}}
         end
-        return t[index]
-    end
-    if str=="item-name.solid-fluid" then
-        name_lower=string.lower(name)
-        local t={}
-        for str1 in string.gmatch(name_lower, "-(%w+)") do
-                table.insert(t, str1)
+    elseif str[1]~=nil and str[2]~=nil and str[3]~=nil then
+        if type(str[3])=="table" then
+            return {str[1], {str[2][1]}, {str[3][1]}}
         end
-        return t[index]
+    else
+        return str
     end
-    return "0"
+    return nil
 end
 
+function localised_name_equal(key, localised_name1, localised_name2)
+    if type(localised_name1)=="table" and type(localised_name2)=="table" then
+        if localised_name1[1]~=nil and localised_name1[2]==nil and localised_name1[3]==nil and localised_name2[1]~=nil and localised_name2[2]==nil and localised_name2[3]==nil then
+            if localised_name1[1]==localised_name2[1] then
+                return true
+            end
+        elseif localised_name1[1]~=nil and localised_name1[2]~=nil and localised_name1[3]==nil and localised_name2[1]~=nil and localised_name2[2]~=nil and localised_name2[3]==nil then
+            if localised_name1[1]==localised_name2[1] and localised_name1[2][1]==localised_name2[2][1] then
+                return true
+            end
+        elseif localised_name1[1]~=nil and localised_name1[2]~=nil and localised_name1[3]~=nil and localised_name2[1]~=nil and localised_name2[2]~=nil and localised_name2[3]~=nil then
+            if localised_name1[1]==localised_name2[1] and localised_name1[2][1]==localised_name2[2][1] and localised_name1[3][1]==localised_name2[3][1] then
+                return true
+            end
+        end
+    elseif localised_name1==nil and type(selected_index)=="string" then
+        if key==selected_index then
+            return true
+        end
+    elseif type(localised_name1)=="string" and type(localised_name2)=="string" then
+        if localised_name1==localised_name2 then
+            return true
+        end
+    end
+    return false
+end
 script.on_event(defines.events.on_gui_opened , gui_opened)
 script.on_event(defines.events.on_gui_closed , gui_closed)
 script.on_event(defines.events.on_gui_click, gui_click)

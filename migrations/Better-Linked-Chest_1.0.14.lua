@@ -9,26 +9,22 @@ function copy_table(table)
     return t
 end
 
-function localised_param(str, name, index)
-    local name_str={}
-    local i=0
-    if str=="item-name.textplate" then
-        name_lower=string.lower(name)
-        local t={}
-        for str1 in string.gmatch(name_lower, "-(%w+)") do
-                table.insert(t, str1)
+function localised_string(str, key)
+    str=str.localised_name
+    if str[1]~=nil and str[2]==nil and str[3]==nil then
+        return {str[1]}
+    elseif str[1]~=nil and str[2]~=nil and str[3]==nil then
+        if type(str[2])=="table" then
+            return {str[1], {str[2][1]}}
         end
-        return t[index]
-    end
-    if str=="item-name.solid-fluid" then
-        name_lower=string.lower(name)
-        local t={}
-        for str1 in string.gmatch(name_lower, "-(%w+)") do
-                table.insert(t, str1)
+    elseif str[1]~=nil and str[2]~=nil and str[3]~=nil then
+        if type(str[3])=="table" then
+            return {str[1], {str[2][1]}, {str[3][1]}}
         end
-        return t[index]
+    else
+        return str
     end
-    return "0"
+    return nil
 end
 
 if global.name_id_table~=nil then
@@ -38,29 +34,13 @@ if global.name_id_table~=nil then
     for key,value in pairs(temp) do
         local str=game.item_prototypes[string.lower(key)]
         if str~=nil then
-            if str.localised_name~=nil then 
-                str=str.localised_name
-                if type(str)=="table" then
-                    str=str[1]
-                end
-            end
-            loc_para1=localised_param(str, key,1)
-            loc_para2=localised_param(str, key,1)
-            --if type(str)=="string" then game.print("str: "..str.." p1: "..loc_para1.." p2: "..loc_para2) end
-            if loc_para1~=nil and loc_para2~=nil then
-                game.print("Case 1: key: "..key.." old: {"..value.."} new: {"..value..","..str..","..loc_para1.."}")
-                --global.name_id_table[key]={value, str, loc_para1}
-            elseif loc_para1~=nil then
-                game.print("Case 2: key: "..key.." old: {"..value.."} new: {"..value..","..str..","..loc_para1..","..loc_para2.."}")
-                --global.name_id_table[key]={value, str, loc_para1, loc_para2}
-            else
-                game.print("Case 3: key: "..key.." old: {"..value.."} new: {"..value..","..str.."}")
-                --global.name_id_table[key]={value, str}
-            end
+            -- Entries that have been added using the choose elem button
+            loc_string=localised_string(str, key)
+            global.name_id_table[key]={value, loc_string}
         else
-
-            game.print("Case 4: key: "..key.." old: {"..value.."} new: {"..value..", nil}")
-            --global.name_id_table[key]={value, nil}
+            -- Entires with custom names
+            game.print(key)
+            global.name_id_table[key]={value, key}
         end
     end
 end
