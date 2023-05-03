@@ -114,15 +114,7 @@ function gui_opened(event)
                     caption={"blc.add_button_cap"}
                 }
             end
-            if test_dropdown==nil then
-                -- blc_frame.children[1]
-                test_dropdown=blc_frame.add{
-                    type="drop-down",
-                    name="blc.test_dropdown",
-                    caption={"blc.test_dropdown_cap"}
-                }
-            end
-            test_dropdown.clear_items()
+
             local table_size=0
             for _ in pairs(global.name_id_table) do 
                 table_size=table_size+1
@@ -192,7 +184,7 @@ function gui_click(event)
                 else
                     local isInTable=false
                     for key,value in pairs(global.name_id_table) do
-                        if value==id then
+                        if value[1]==id then
                             isInTable=true
                             player.print({"blc.id_alredy_set_1", id, key})
                         end
@@ -201,16 +193,22 @@ function gui_click(event)
                             player.print({"blc.name_alredy_set_1", name_textfield.text, id})
                         end
                     end
-                    player.print(name_textfield.text)
-                    local str=game.item_prototypes[string.lower(name_textfield.text)].localised_name[1]
-                    if str~=nil then
-                        player.print(str)
-                        test_dropdown.add_item({str})
-                    else
-                        test_dropdown.add_item(name_textfield.text)
-                    end
                     if isInTable==false then
-                        global.name_id_table[name_textfield.text]=id
+                        local str=game.item_prototypes[string.lower(name_textfield.text)]
+                        if str~=nil then
+                            str=str.localised_name[1]
+                            if loc_param1==nil and loc_param2==nil then
+                                global.name_id_table[name_textfield.text]={id, str}
+                            elseif loc_param1~=nil and loc_param2==nil then
+                                global.name_id_table[name_textfield.text]={id, str, loc_param1}
+                            elseif loc_param1~=nil and loc_param2~=nil then
+                                global.name_id_table[name_textfield.text]={id, str, loc_param1, loc_param2}
+                            end
+                        else
+                            global.name_id_table[name_textfield.text]={id, nil}
+                        end
+                        id_label.caption="ID: "..id
+                        global.blc_entity.link_id=id
                         fillDropdown(name_dropdown)
                         name_textfield.text=""
                         local first_free_id=getFirstFreeID()
@@ -218,8 +216,6 @@ function gui_click(event)
                         
                         local index=getIndexById(name_dropdown, id)
                         name_dropdown.selected_index=index
-                        id_label.caption="ID: "..id
-                        global.blc_entity.link_id=id
                         
                         if choose_elem_button.elem_value~=nil then
                             choose_elem_button.elem_value=nil
@@ -227,7 +223,7 @@ function gui_click(event)
                     end
                 end
             else
-                player.print("Link ID has to be a positive integer!")
+                player.print("blc.pos_int_error")
             end
         elseif element.name=="blc.remove_button"then
             removeDropdown(name_dropdown,id_label)
@@ -249,11 +245,9 @@ function gui_selection_state_changed(event)
         local selected_item=element.get_item(selected_index)
         if selected_index>0 then
             for key,value in pairs(global.name_id_table) do
-                if selected_item==key then
-                    global.blc_entity.link_id=value
-                    local sel_id=getSelectedID(name_dropdown)
-                    id_label.caption="ID: "..sel_id
-                end
+                local sel_id=getSelectedID(name_dropdown, player)
+                id_label.caption="ID: "..sel_id
+                if type(sel_id)=="number" then global.blc_entity.link_id=sel_id end
             end
         end
     end
@@ -276,7 +270,7 @@ function pre_build(event)
     if player.is_cursor_blueprint() then
         local original_entities=player.get_blueprint_entities()
         local contains_blc=false
-        for i,e in iparis(original_entities) do
+        for i,e in ipairs(original_entities) do
             if e.name=="better-linked-chest" then
                 contains_blc=true
             end
@@ -310,10 +304,10 @@ function gui_elem_changed(event)
                 name_textfield.text=name
                 for key,value in pairs(global.name_id_table) do
                     if name==key then
-                        global.blc_entity.link_id=value
+                        global.blc_entity.link_id=value[1]
                         fillDropdown(getChild(player, "blc.name_dropdown"))
                         local id_label=getChild(player, "blc.id_label")
-                        id_label.caption="ID: "..value
+                        id_label.caption="ID: "..value[1]
                         element.elem_value=nil
                     end
                 end
@@ -358,9 +352,19 @@ function fillDropdown(dropdown)
     global.name_id_table=newTab
     local i = 1
     for key,value in pairs(newTab) do
-        dropdown.add_item(key)
+        if value[2]~=nil then
+            if value[3]~=nil and value[4]~=nil then
+                dropdown.add_item({value[2], value[3], value[4]})
+            elseif value[3]~=nil and value[4]==nil then
+                dropdown.add_item({value[2], value[3]})
+            else
+                dropdown.add_item({value[2]})
+            end
+        else
+            dropdown.add_item(key)
+        end
         if global.blc_entity.link_id~=0 then
-            if value==global.blc_entity.link_id then
+            if value[1]==global.blc_entity.link_id then
                 dropdown.selected_index=i
             end
         end
@@ -381,20 +385,40 @@ function removeDropdown(dropdown,label)
     local selected_id=dropdown.selected_index
     if selected_id>0 then
         local selected_item=dropdown.get_item(selected_id)
-        global.name_id_table[selected_item]=nil
+        local selected_name=getNamebyId(global.blc_entity.link_id)
+        global.name_id_table[selected_name]=nil
         fillDropdown(dropdown)
         global.blc_entity.link_id=0
         label.caption="ID: --"
     end
 end
 
-function getSelectedID(dropdown)
+function getSelectedID(dropdown, player)
     local selected_index=dropdown.selected_index
     if selected_index>0 then
         local selected_item=dropdown.get_item(selected_index)
         for key,value in pairs(global.name_id_table) do
-            if key==selected_item then
-                return value
+        end
+        for key,value in pairs(global.name_id_table) do
+            local str=game.item_prototypes[string.lower(key)]
+            if str~=nil then
+                str=str.localised_name[1]
+            end
+            if selected_item[2]~=nil and selected_item[3]~=nil and value[3]~=nil then
+                if selected_item[2]==value[3] and selected_item[3]==value[4] then
+                    return value[1] 
+                end
+                if selected_item[2]==value[3] and value[4]==nil then
+                    return value[1] 
+                end
+            elseif selected_item[2]~=nil and value[3]~=nil then
+                if selected_item[2]==value[3] then 
+                    return value[1]
+                end
+            elseif string.lower(key)==selected_item[1] then
+                return value[1]
+            elseif str==selected_item[1] then
+                return value[1]
             end
         end
     end
@@ -405,7 +429,7 @@ function getFirstFreeID()
     for i=1, 4294967295, 1 do
         isInTable=false
         for key,value in pairs(global.name_id_table) do
-            if value==i then
+            if value[1]==i then
                 isInTable=true
             end
         end
@@ -417,8 +441,17 @@ end
 
 function getNamebyId(id)
     for key,value in pairs(global.name_id_table) do
-        if value==id then
+        if value[1]==id then
             return key
+        end
+    end
+    return "--"
+end
+
+function getLocNamebyId(id)
+    for key,value in pairs(global.name_id_table) do
+        if value[1]==id then
+            return value[2]
         end
     end
     return "--"
@@ -427,7 +460,7 @@ end
 function getIdbyName(name)
     for key,value in pairs(global.name_id_table) do
         if key==name then
-            return value
+            return value[1]
         end
     end
     return ""
@@ -435,8 +468,11 @@ end
 
 function getIndexByGlobalId(dropdown)
     local name=getNamebyId(global.blc_entity.link_id)
+    local localised_name=getLocNamebyId(global.blc_entity.link_id)
     for i, item in ipairs(dropdown.items) do
-        if item==name then
+        if item[1]==name then
+            return i
+        elseif item[1]==localised_name then
             return i
         end
     end
@@ -445,10 +481,35 @@ end
 function getIndexById(dropdown, id)
     local name=getNamebyId(id)
     for i, item in ipairs(dropdown.items) do
-        if item==name then
+        value=global.name_id_table[name]
+        if item[1]==name then
+            return i
+        elseif item[1]==value[2] then
             return i
         end
     end
+end
+
+function localised_param(str, name, index)
+    local name_str={}
+    local i=0
+    if str=="item-name.textplate" then
+        name_lower=string.lower(name)
+        local t={}
+        for str1 in string.gmatch(name_lower, "-(%w+)") do
+                table.insert(t, str1)
+        end
+        return t[index]
+    end
+    if str=="item-name.solid-fluid" then
+        name_lower=string.lower(name)
+        local t={}
+        for str1 in string.gmatch(name_lower, "-(%w+)") do
+                table.insert(t, str1)
+        end
+        return t[index]
+    end
+    return "0"
 end
 
 script.on_event(defines.events.on_gui_opened , gui_opened)
