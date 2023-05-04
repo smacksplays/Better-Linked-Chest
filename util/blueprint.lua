@@ -70,7 +70,7 @@ local function multiply_matrix_matrix(matrix1, matrix2)
     }
 end
 
-return function(blueprint_entities, event, player)
+return function(blueprint_entities, tiles, event, player)
     local cursor_position = event.position
     local rotation = event.direction or defines.direction.north
     -- first, rotate (and/or flip) the blueprint and compute it's size
@@ -98,12 +98,13 @@ return function(blueprint_entities, event, player)
         location_tranform = multiply_matrix_matrix(rotation_matrix, location_tranform)
     end
 
-    local minX =  1000000000
-    local minY =  1000000000
-    local maxX = -1000000000
-    local maxY = -1000000000
-
+    local minX_entity =  1000000000
+    local minY_entity =  1000000000
+    local maxX_entity = -1000000000
+    local maxY_entity = -1000000000
+    if blueprint_entities==nil then return nil end
     for _,entity in pairs(blueprint_entities) do
+        game.print(entity.name)
         local direction = defines.direction.north
         if game.entity_prototypes[entity.name].supports_direction then
             local direction_vector = direction_to_vector(entity.direction or defines.direction.north)
@@ -130,18 +131,42 @@ return function(blueprint_entities, event, player)
             height = swap
         end
 
-        minX = math.min(minX, math.floor(position.x - width  / 2 + 0.5))
-        minY = math.min(minY, math.floor(position.y - height / 2 + 0.5))
-        maxX = math.max(maxX, math.floor(position.x + width  / 2 + 0.5))
-        maxY = math.max(maxY, math.floor(position.y + height / 2 + 0.5))
+        minX_entity = math.min(minX_entity, math.floor(position.x - width  / 2 + 0.5))
+        minY_entity = math.min(minY_entity, math.floor(position.y - height / 2 + 0.5))
+        maxX_entity = math.max(maxX_entity, math.floor(position.x + width  / 2 + 0.5))
+        maxY_entity = math.max(maxY_entity, math.floor(position.y + height / 2 + 0.5))
     end
 
-    local blueprint_width  = maxX - minX
-    local blueprint_height = maxY - minY
+    local blueprint_width  = maxX_entity - minX_entity
+    local blueprint_height = maxY_entity - minY_entity
+    game.print("w: "..blueprint_width.."h: "..blueprint_height)
 
     -- then, calculate the "align" so that entity pos + aligh = real position
-    local alignX = math.floor(cursor_position.x - blueprint_width  / 2 + 0.5) - minX
-    local alignY = math.floor(cursor_position.y - blueprint_height / 2 + 0.5) - minY
+    local alignX = math.floor(cursor_position.x - blueprint_width  / 2 + 0.5) - minX_entity 
+    local alignY = math.floor(cursor_position.y - blueprint_height / 2 + 0.5) - minY_entity
+
+
+    local minX_tile =  1000000000
+    local minY_tile =  1000000000
+    local maxX_tile = -1000000000
+    local maxY_tile = -1000000000
+
+    if tiles~=nil then
+         for i,tile in ipairs(tiles) do
+            local position = tile.position
+            minX_tile = math.min(minX_tile, math.floor(position.x - 1  / 2 + 0.5))
+            minY_tile = math.min(minY_tile, math.floor(position.y - 1 / 2 + 0.5))
+            maxX_tile = math.max(maxX_tile, math.floor(position.x + 1  / 2 + 0.5))
+            maxY_tile = math.max(maxY_tile, math.floor(position.y + 1 / 2 + 0.5))
+        end
+        blueprint_width  = maxX_tile - minX_tile
+        blueprint_height = maxY_tile - minY_tile
+        alignX = math.floor(cursor_position.x - blueprint_width  / 2 + 0.5) - minX_tile 
+        alignY = math.floor(cursor_position.y - blueprint_height / 2 + 0.5) - minY_tile
+    end
+    
+    game.print("w: "..blueprint_width.."h: "..blueprint_height)
+
 
     -- finally, add align to entity positions
     local final_entities = {}

@@ -265,18 +265,21 @@ function pre_build(event)
 
     if player.is_cursor_blueprint() then
         local original_entities=player.get_blueprint_entities()
-        local contains_blc=false
-        for i,e in ipairs(original_entities) do
-            if e.name=="better-linked-chest" then
-                contains_blc=true
+        local original_tiles=player.cursor_stack.get_blueprint_tiles()
+        if type(original_entities)=="table" then
+            local contains_blc=false
+            for i,e in ipairs(original_entities) do
+                if e.name=="better-linked-chest" then
+                    contains_blc=true
+                end
             end
-        end
-        if contains_blc==true then
-            local blueprint_entities=func_blueprint(original_entities, event, player)
-            for i,e in ipairs(blueprint_entities) do
-                local entity = surface.find_entity("better-linked-chest", e.position)
-                if entity~=nil then
-                    entity.link_id=e.link_id
+            if contains_blc==true then
+                local blueprint_entities=func_blueprint(original_entities, original_tiles, event, player)
+                for i,e in ipairs(blueprint_entities) do
+                    local entity = surface.find_entity("better-linked-chest", e.position)
+                    if entity~=nil then
+                        entity.link_id=e.link_id
+                    end
                 end
             end
         end
