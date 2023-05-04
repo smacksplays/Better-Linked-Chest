@@ -139,7 +139,6 @@ return function(blueprint_entities, tiles, event, player)
 
     local blueprint_width  = maxX_entity - minX_entity
     local blueprint_height = maxY_entity - minY_entity
-    game.print("w: "..blueprint_width.."h: "..blueprint_height)
 
     -- then, calculate the "align" so that entity pos + aligh = real position
     local alignX = math.floor(cursor_position.x - blueprint_width  / 2 + 0.5) - minX_entity 
@@ -165,7 +164,6 @@ return function(blueprint_entities, tiles, event, player)
         alignY = math.floor(cursor_position.y - blueprint_height / 2 + 0.5) - minY_tile
     end
     
-    game.print("w: "..blueprint_width.."h: "..blueprint_height)
 
 
     -- finally, add align to entity positions
