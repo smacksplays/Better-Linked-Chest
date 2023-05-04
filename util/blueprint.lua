@@ -104,7 +104,6 @@ return function(blueprint_entities, tiles, event, player)
     local maxY_entity = -1000000000
     if blueprint_entities==nil then return nil end
     for _,entity in pairs(blueprint_entities) do
-        game.print(entity.name)
         local direction = defines.direction.north
         if game.entity_prototypes[entity.name].supports_direction then
             local direction_vector = direction_to_vector(entity.direction or defines.direction.north)

@@ -265,7 +265,10 @@ function pre_build(event)
 
     if player.is_cursor_blueprint() then
         local original_entities=player.get_blueprint_entities()
-        local original_tiles=player.cursor_stack.get_blueprint_tiles()
+        local original_tiles
+        if player.cursor_stack.valid_for_read==true then
+            original_tiles=player.cursor_stack.get_blueprint_tiles()
+        end
         if type(original_entities)=="table" then
             local contains_blc=false
             for i,e in ipairs(original_entities) do
@@ -430,9 +433,8 @@ function getIndexByGlobalId(dropdown)
     local name=getNamebyId(global.blc_entity.link_id)
     local localised_name=getLocNamebyId(global.blc_entity.link_id)
     for i, item in ipairs(dropdown.items) do
-        if item[1]==name then
-            return i
-        elseif item[1]==localised_name then
+        local value=global.name_id_table[name]
+        if localised_name_equal(name, value[2], item) then
             return i
         end
     end
