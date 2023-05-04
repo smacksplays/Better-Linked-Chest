@@ -3,6 +3,7 @@ Version: 1.0.14
 Date: 2023-05
   Feature:
     - Translated Dropdown
+    - Blueprints with Tiles working
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.13
