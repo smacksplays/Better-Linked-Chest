@@ -8,7 +8,7 @@ local space={"setting.space"}
 data:extend({
     {
 		type = "int-setting",
-		name = "better-linked-chest-inventory-size",
+		name = "blc-inventory-size",
 		order = "c",
 		setting_type = "startup",
 		default_value = 120,
@@ -17,14 +17,14 @@ data:extend({
     },
     {
         type = "string-setting",
-        name = "better-linked-chest-required-research",
+        name = "blc-required-research",
         setting_type = "startup",
         default_value = "chemical",
         allowed_values = { "automation", "logistic", "chemical", "production", "utility", "space" }
     },
     {
         type = "string-setting",
-        name = "better-linked-chest-crafting-cost",
+        name = "blc-crafting-cost",
         setting_type = "startup",
         default_value = "medium",
         allowed_values = { "easy", "medium", "hard"}
