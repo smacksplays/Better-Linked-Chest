@@ -12,13 +12,13 @@ script.on_event(defines.events.on_gui_opened , function(event)
             table_size=table_size+1
         end
         if table_size~=0 then
-            fillDropdown(player)
+            fillDropdown(nil, player)
         end
         if global.blc_entity.link_id==0 then
             player.gui.relative.blc_frame.name_dropdown.selected_index=0
             player.gui.relative.blc_frame.id_label.caption="ID: 0"
         else
-            local index = getIndexByGlobalId(player.gui.relative.blc_frame.name_dropdown)
+            local index = getDropdownIndexByID(player.gui.relative.blc_frame.name_dropdown, global.blc_entity.link_id)
             if index~=nil then
                 player.gui.relative.blc_frame.name_dropdown.selected_index=index
             end
@@ -141,13 +141,13 @@ function addNameID(element, player)
         if  element.parent==player.gui.relative.blc_frame then
             global.blc_entity.link_id=id
         end
-        fillDropdown(player)
+        fillDropdown(element, player)
         blc_frame.name_textfield.text=""
         local first_free_id=getFirstFreeID()
         player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
         player.gui.left.blc_frame.id_textfield.text=""..first_free_id
         
-        local index=getIndexById(blc_frame.name_dropdown, id)
+        local index=getDropdownIndexByID(blc_frame.name_dropdown, id)
         blc_frame.name_dropdown.selected_index=index
         
         if blc_frame.choose_elem_button.elem_value~=nil then
@@ -161,25 +161,38 @@ end
 
 function removeNameID(element, player)
     local dropdown=element.parent.name_dropdown
-    local selected_id=dropdown.selected_index
-    if selected_id>0 then
-        local selected_item=dropdown.get_item(selected_id)
-        local selected_name=getNamebyId(global.blc_entity.link_id)
-        local sel_id=player.gui.left.blc_frame.name_dropdown.selected_index
-        local sel_item=player.gui.left.blc_frame.name_dropdown.get_item(sel_id)
-        if localised_name_equal(selected_item, selected_item,sel_item) then
-            player.gui.left.blc_frame.id_label.caption="ID: 0"
+    local selected_index=dropdown.selected_index
+    if selected_index>0 then
+        local selected_item=dropdown.get_item(selected_index)
+        -- get key for selected item
+        local selected_name
+        for key,value in pairs(global.name_id_table) do
+            if localised_name_equal(key, value[2], selected_item) or key==selected_item then 
+                selected_name=key
+                break 
+            end
         end
+        -- remove from table
         global.name_id_table[selected_name]=nil
-        fillDropdown(player)
+        -- set link id to 0 if needed
         if element.parent==player.gui.relative.blc_frame then
             global.blc_entity.link_id=0
+            player.gui.relative.blc_frame.id_label.caption="ID: 0"
+            -- correct visuals for left frame
+            local left_dropdown=player.gui.left.blc_frame.name_dropdown
+            if left_dropdown.selected_index>0 then
+                left_selected_item=left_dropdown.get_item(left_dropdown.selected_index)
+                if localised_name_equal(selected_item, selected_item, left_selected_item) then
+                    player.gui.left.blc_frame.id_label.caption="ID: 0"
+                end
+            end
         end
-        player.gui.relative.blc_frame.id_label.caption="ID: 0"
+        -- reset dropdowns
+        fillDropdown(element, player)
+        local first_free_id=getFirstFreeID()
+        player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
+        player.gui.left.blc_frame.id_textfield.text=""..first_free_id
     end
-    local first_free_id=getFirstFreeID()
-    player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-    player.gui.left.blc_frame.id_textfield.text=""..first_free_id
 end
 
 script.on_event(defines.events.on_gui_selection_state_changed, function(event)
@@ -257,12 +270,14 @@ script.on_event(defines.events.on_gui_elem_changed, function(event)
                 end
                 name=name:gsub("%f[%a].", string.upper)
                 name_textfield.text=name
-                local first_free_id=getFirstFreeID()
-                element.parent.id_textfield.text=""..first_free_id
+                --local first_free_id=getFirstFreeID()
+                --element.parent.id_textfield.text=""..first_free_id
                 for key,value in pairs(global.name_id_table) do
                     if name==key then
-                        global.blc_entity.link_id=value[1]
-                        fillDropdown(player)
+                        if element.parent==player.gui.relative.blc_frame then
+                            global.blc_entity.link_id=value[1]
+                        end
+                        fillDropdown(element, player, value[1])
                         element.parent.id_label.caption="ID: "..value[1]
                         element.elem_value=nil
                     end
@@ -273,9 +288,11 @@ script.on_event(defines.events.on_gui_elem_changed, function(event)
 end)
 
 
-function fillDropdown(player)
+function fillDropdown(element, player, left_id)
     local rel_dropdown=player.gui.relative.blc_frame.name_dropdown
     local left_dropdown=player.gui.left.blc_frame.name_dropdown
+    rel_dropdown.selected_index=0
+    left_dropdown.selected_index=0
     local sel_index = left_dropdown.selected_index
     local old_selected
     if sel_index>0 then
@@ -289,7 +306,6 @@ function fillDropdown(player)
     table.sort(tkeys)
     for _,k in ipairs(tkeys) do newTab[k]=global.name_id_table[k] end
     global.name_id_table=newTab
-
     local i = 1
     for key,value in pairs(newTab) do
         if value[2]~=nil then
@@ -299,11 +315,18 @@ function fillDropdown(player)
             rel_dropdown.add_item(key)
             left_dropdown.add_item(key)
         end
-        if global.blc_entity.link_id ~= 0 and global.blc_entity.link_id==value[1] then
-            rel_dropdown.selected_index=i
-        end
-        if localised_name_equal(old_selected, old_selected, value[2]) then 
-            left_dropdown.selected_index=i 
+        if element==nil then
+            if global.blc_entity.valid and global.blc_entity.link_id==value[1] then
+                rel_dropdown.selected_index=i
+            elseif left_id==value[1] then 
+                left_dropdown.selected_index=i 
+            end
+        else
+            if element.parent==player.gui.relative.blc_frame and global.blc_entity.valid and global.blc_entity.link_id==value[1] then
+                rel_dropdown.selected_index=i
+            elseif element.parent==player.gui.left.blc_frame and left_id==value[1] then 
+                left_dropdown.selected_index=i 
+            end
         end
         i=i+1
     end
@@ -344,37 +367,13 @@ function getFirstFreeID()
     end
 end
 
-function getNamebyId(id)
+function getDropdownIndexByID(dropdown, id)
+    local name
     for key,value in pairs(global.name_id_table) do
         if value[1]==id then
-            return key
+            name=key
         end
     end
-    return "--"
-end
-
-function getLocNamebyId(id)
-    for key,value in pairs(global.name_id_table) do
-        if value[1]==id then
-            return value[2]
-        end
-    end
-    return "--"
-end
-
-function getIndexByGlobalId(dropdown)
-    local name=getNamebyId(global.blc_entity.link_id)
-    local localised_name=getLocNamebyId(global.blc_entity.link_id)
-    for i, item in ipairs(dropdown.items) do
-        local value=global.name_id_table[name]
-        if localised_name_equal(name, value[2], item) then
-            return i
-        end
-    end
-end
-
-function getIndexById(dropdown, id)
-    local name=getNamebyId(id)
     for i, item in ipairs(dropdown.items) do
         local value=global.name_id_table[name]
         if localised_name_equal(name, value[2], item) then
@@ -518,4 +517,5 @@ function create_blc_gui(player)
     create_mod_gui(player)
     create_setup_gui(player, player.gui.relative)
     create_setup_gui(player, player.gui.left)
+    fillDropdown(nil, player)
 end
