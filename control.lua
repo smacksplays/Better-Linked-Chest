@@ -233,8 +233,12 @@ script.on_event(defines.events.on_pre_build, function(event)
     if player.is_cursor_blueprint() then
         local original_entities=player.get_blueprint_entities()
         local original_tiles
-        if player.cursor_stack.valid_for_read==true then
+        if player.cursor_stack.valid_for_read==true and player.cursor_stack.is_blueprint then
             original_tiles=player.cursor_stack.get_blueprint_tiles()
+        elseif player.cursor_stack.valid_for_read==true and player.cursor_stack.is_blueprint_book then
+            local active_index=player.cursor_stack.active_index
+            local items=player.cursor_stack.get_inventory(defines.inventory.item_main)
+            original_tiles=items[active_index].get_blueprint_tiles()
         end
         if type(original_entities)=="table" then
             local contains_blc=false
