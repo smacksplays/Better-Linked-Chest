@@ -1,11 +1,13 @@
 local func_blueprint = require("util/blueprint")
 local mod_gui = require("mod-gui")
+local blc_entity_name="better-linked-chest"
 
 script.on_event(defines.events.on_gui_opened , function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
+    if event.entity==nil then return end
 
-    if event.entity~=nil and event.entity.name == "better-linked-chest" then
+    if event.entity.name == blc_entity_name then
         global.blc_entity=event.entity
         local table_size=0
         for _ in pairs(global.name_id_table) do 
@@ -30,6 +32,18 @@ script.on_event(defines.events.on_gui_opened , function(event)
     end
 end)
 
+script.on_event(defines.events.on_gui_closed, function(event)
+    local player=game.get_player(event.player_index)
+    if player==nil then return end
+    if event.entity==nil then return end
+
+    if event.entity.name == blc_entity_name then
+        if player.gui.relative.blc_frame.blc_frame~=nil then
+            player.gui.relative.blc_frame.name_dropdown.close_dropdown()
+        end
+    end
+end)
+
 script.on_configuration_changed(function(event)
     for i, player in pairs(game.players) do
         create_blc_gui(player)
@@ -51,21 +65,6 @@ script.on_event(defines.events.on_player_joined_game, function(event)
     create_blc_gui(game.get_player(event.player_index))
 end)
 
-script.on_event(defines.events.on_gui_closed, function(event)
-    local player=game.get_player(event.player_index)
-    if player==nil then return end
-    if event.entity~=nil and event.entity.name == "better-linked-chest" then
-        if global.blc_entity.name=="better-linked-chest" then
-            if player.gui.relative.blc_frame.blc_frame~=nil then
-                player.gui.relative.blc_frame.name_dropdown.close_dropdown()
-            end
-        end
-    end
-end)
-
-local function isInteger(str)
-    return not (str == "" or str:find("%D"))
-end
 
 script.on_event(defines.events.on_gui_click, function(event)
     local player=game.get_player(event.player_index)
@@ -74,14 +73,17 @@ script.on_event(defines.events.on_gui_click, function(event)
 
     -- Sprite Button
     if element.name=="blc_sprite_button" then
-        if player.gui.left.blc_frame.visible then
-            player.gui.left.blc_frame.visible=false
+        if player.gui.screen.blc_frame.visible then
+            player.gui.screen.blc_frame.visible=false
         else
-            player.gui.left.blc_frame.visible=true
+            player.gui.screen.blc_frame.visible=true
             local first_free_id=getFirstFreeID()
-            player.gui.left.blc_frame.id_textfield.text=""..first_free_id
+            player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
         end
         return
+    end
+    if element.name=="blc.close_button" then
+        player.gui.screen.blc_frame.visible=false
     end
 
     -- Add Button
@@ -145,7 +147,7 @@ function addNameID(element, player)
         blc_frame.name_textfield.text=""
         local first_free_id=getFirstFreeID()
         player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.left.blc_frame.id_textfield.text=""..first_free_id
+        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
         
         local index=getDropdownIndexByID(blc_frame.name_dropdown, id)
         blc_frame.name_dropdown.selected_index=index
@@ -157,6 +159,10 @@ function addNameID(element, player)
         player.print({"blc.pos_int_error"})
         return 
     end
+end
+
+function isInteger(str)
+    return not (str == "" or str:find("%D"))
 end
 
 function removeNameID(element, player)
@@ -179,11 +185,11 @@ function removeNameID(element, player)
             global.blc_entity.link_id=0
             player.gui.relative.blc_frame.id_label.caption="ID: 0"
             -- correct visuals for left frame
-            local left_dropdown=player.gui.left.blc_frame.name_dropdown
+            local left_dropdown=player.gui.screen.blc_frame.name_dropdown
             if left_dropdown.selected_index>0 then
                 left_selected_item=left_dropdown.get_item(left_dropdown.selected_index)
                 if localised_name_equal(selected_item, selected_item, left_selected_item) then
-                    player.gui.left.blc_frame.id_label.caption="ID: 0"
+                    player.gui.screen.blc_frame.id_label.caption="ID: 0"
                 end
             end
         end
@@ -191,7 +197,7 @@ function removeNameID(element, player)
         fillDropdown(element, player)
         local first_free_id=getFirstFreeID()
         player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.left.blc_frame.id_textfield.text=""..first_free_id
+        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
     end
 end
 
@@ -218,7 +224,7 @@ end)
 
 script.on_event(defines.events.on_entity_settings_pasted, function(event)
     if event.source~=nil and event.destination~=nil then
-        if event.source.name=="better-linked-chest" and event.destination.name=="better-linked-chest" then
+        if event.source.name==blc_entity_name and event.destination.name==blc_entity_name then
             event.destination.link_id=event.source.link_id
         end
     end
@@ -243,14 +249,14 @@ script.on_event(defines.events.on_pre_build, function(event)
         if type(original_entities)=="table" then
             local contains_blc=false
             for i,e in ipairs(original_entities) do
-                if e.name=="better-linked-chest" then
+                if e.name==blc_entity_name then
                     contains_blc=true
                 end
             end
             if contains_blc==true then
                 local blueprint_entities=func_blueprint(original_entities, original_tiles, event, player)
                 for i,e in ipairs(blueprint_entities) do
-                    local entity = surface.find_entity("better-linked-chest", e.position)
+                    local entity = surface.find_entity(blc_entity_name, e.position)
                     if entity~=nil then
                         entity.link_id=e.link_id
                     end
@@ -294,7 +300,7 @@ end)
 
 function fillDropdown(element, player, left_id)
     local rel_dropdown=player.gui.relative.blc_frame.name_dropdown
-    local left_dropdown=player.gui.left.blc_frame.name_dropdown
+    local left_dropdown=player.gui.screen.blc_frame.name_dropdown
     rel_dropdown.selected_index=0
     left_dropdown.selected_index=0
     local sel_index = left_dropdown.selected_index
@@ -328,7 +334,7 @@ function fillDropdown(element, player, left_id)
         else
             if element.parent==player.gui.relative.blc_frame and global.blc_entity.valid and global.blc_entity.link_id==value[1] then
                 rel_dropdown.selected_index=i
-            elseif element.parent==player.gui.left.blc_frame and left_id==value[1] then 
+            elseif element.parent==player.gui.screen.blc_frame and left_id==value[1] then 
                 left_dropdown.selected_index=i 
             end
         end
@@ -434,7 +440,7 @@ end
 function destory_blc_gui(player)
     if player.gui.relative["blc.blc_frame"]~=nil then player.gui.relative["blc.blc_frame"].destroy() end
     if player.gui.relative.blc_frame~=nil then player.gui.relative.blc_frame.destroy() end
-    if player.gui.left.blc_frame~=nil then player.gui.left.blc_frame.destroy() end
+    if player.gui.screen.blc_frame~=nil then player.gui.screen.blc_frame.destroy() end
     if mod_gui.get_button_flow(player).blc_sprite_button~=nil then mod_gui.get_button_flow(player).blc_sprite_button.destroy() end
 end
 
@@ -461,13 +467,44 @@ function create_setup_gui(player, location)
             },
             visible=true
         }
-    elseif location==player.gui.left then
+    elseif location==player.gui.screen then
         location.add{
             type="frame",
             name="blc_frame",
             direction="vertical",
+            --caption={"blc.blc_frame_cap"},
+            visible=false,
+            location={5, 50}
+        }
+
+        location.blc_frame.add{
+            type="flow",
+            name="blc_titlebar"
+        }
+
+        location.blc_frame.blc_titlebar.drag_target=location.blc_frame
+        location.blc_frame.blc_titlebar.add{
+            type="label",
+            style="frame_title",
             caption={"blc.blc_frame_cap"},
-            visible=false
+            ignored_by_interaction=true
+        }
+        location.blc_frame.blc_titlebar.add{ 
+            type="empty-widget", 
+            style="draggable_space", 
+            name="blc_filler",
+            ignored_by_interaction=true
+        }
+        location.blc_frame.blc_titlebar.blc_filler.style.height = 24
+        location.blc_frame.blc_titlebar.blc_filler.style.horizontally_stretchable = true
+        location.blc_frame.blc_titlebar.add{
+            type="sprite-button",
+            name="blc.close_button",
+            style="frame_action_button",
+            tooltip={"blc.close-instruction"},
+            sprite="utility/close_white",
+            hovered_sprite="utility/close_black",
+            clicked_sprite="utility/close_black"
         }
     end
     location.blc_frame.add{
@@ -520,6 +557,6 @@ function create_blc_gui(player)
     destory_blc_gui(player)
     create_mod_gui(player)
     create_setup_gui(player, player.gui.relative)
-    create_setup_gui(player, player.gui.left)
+    create_setup_gui(player, player.gui.screen)
     fillDropdown(nil, player)
 end
