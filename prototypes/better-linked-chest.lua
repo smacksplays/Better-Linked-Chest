@@ -179,6 +179,7 @@ return function(chest_name, source, container)
             scale=0.3
         }
     }
+    entity.gui_mode="all"
     entity.corpse=""
     entity.selecttable_in_game=true
     entity.collision_box={{-0.25,-0.25},{0.25,0.25}}

@@ -6,7 +6,6 @@ script.on_event(defines.events.on_gui_opened , function(event)
     if player==nil then return end
     if event.entity==nil then return end
     if event.entity.name==blc_entity_name then
-        player.print(event.entity.type)
         global.blc_entity=event.entity
         local table_size=0
         for _ in pairs(global.name_id_table) do 
