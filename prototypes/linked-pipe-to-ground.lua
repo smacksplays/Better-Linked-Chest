@@ -1,5 +1,5 @@
-return function(chest_name, source, container)
-    local inv_size=settings.startup["blc-inventory-size"].value
+return function(new_name, source)
+
     local crafting_cost = settings.startup["blc-crafting-cost"].value
     local blc_recipe
 
@@ -139,71 +139,110 @@ return function(chest_name, source, container)
             "space-science-pack"
         }
     end
-    local steel_chest=table.deepcopy(data.raw["container"]["steel-chest"]) 
 
     local item=util.table.deepcopy(data.raw["item"][source])
-    item.name=chest_name
-    item.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
+    item.name=new_name
+    item.icon="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-right.png"
     item.icon_size=64
     item.icon_mipmaps=4
     item.subgroup="storage"
-    item.order="a[steel-chest]-a["..chest_name.."]"
-    item.place_result=chest_name
+    item.order="a[steel-chest]-a["..new_name.."]"
+    item.place_result=new_name
     item.stack_size=100
 
-    local entity=util.table.deepcopy(data.raw[container][source])
-    entity.type="linked-container"
-    entity.name=chest_name
+    local entity=util.table.deepcopy(data.raw[source][source])
+    entity.name=new_name
     entity.minable=
     {
         mining_time=0.2,
-        result=chest_name
+        result=new_name
     }
-    entity.inventory_size=inv_size
-    entity.circuit_wire_connection_points=steel_chest.circuit_wire_connection_point
-    entity.circuit_connector_sprites=steel_chest.circuit_connector_spritess
-    entity.circuit_wire_max_distance=steel_chest.circuit_wire_max_distance
-    entity.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
+    entity.icon="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-left.png"
     entity.icon_size=64
     entity.picture=
     {
-        filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-        width=128,
-        height=128,
-        scale=0.15,
-        hr_version=
+        north=
         {
-            filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-            width=128,
-            height=128,
-            scale=0.3
+            filename="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-up.png",
+            width=64,
+            height=64,
+            scale=0.15,
+            hr_version=
+            {
+                filename="__Better-Linked-Chest__/graphics/hr-"..new_name.."/"..new_name.."-up.png",
+                width=128,
+                height=128,
+                scale=0.3
+            }
+        },
+        east=
+        {
+            filename="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-right.png",
+            width=64,
+            height=64,
+            scale=0.15,
+            hr_version=
+            {
+                filename="__Better-Linked-Chest__/graphics/hr-"..new_name.."/"..new_name.."-right.png",
+                width=128,
+                height=128,
+                scale=0.3
+            }
+        },
+        south=
+        {
+            filename="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-down.png",
+            width=64,
+            height=64,
+            scale=0.15,
+            hr_version=
+            {
+                filename="__Better-Linked-Chest__/graphics/hr-"..new_name.."/"..new_name.."-down.png",
+                width=128,
+                height=128,
+                scale=0.3
+            }
+        },
+        west=
+        {
+            filename="__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-left.png",
+            width=64,
+            height=64,
+            scale=0.15,
+            hr_version=
+            {
+                filename="__Better-Linked-Chest__/graphics/hr-"..new_name.."/"..new_name.."-left.png",
+                width=128,
+                height=128,
+                scale=0.3
+            }
         }
     }
-    entity.gui_mode="all"
-    entity.corpse=""
-    entity.selecttable_in_game=true
-    entity.collision_box={{-0.25,-0.25},{0.25,0.25}}
-    entity.selection_box = {{-0.5,-0.5},{0.5,0.5}}
+    --entity.gui_mode="all"
+    --entity.corpse=""
+    --entity.selecttable_in_game=true
+    --entity.collision_box={{-0.25,-0.25},{0.25,0.25}}
+    --entity.selection_box = {{-0.5,-0.5},{0.5,0.5}}
 
     local recipe=
     {
         type="recipe",
-        name=chest_name,
+        name=new_name,
         enabled=false,
         ingredients=blc_recipe,
-        result=chest_name
+        result=new_name
     }
 
     local technology=
     {
         type = "technology",
-        name = chest_name,
-        icon = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-        icon_size = 128,
+        name = new_name,
+        icon = "__Better-Linked-Chest__/graphics/"..new_name.."/"..new_name.."-right.png",
+        icon_size = 64,
         effects = { 
             { 
                 type="unlock-recipe", 
-                recipe=chest_name 
+                recipe=new_name 
             } 
         },
         unit = 
