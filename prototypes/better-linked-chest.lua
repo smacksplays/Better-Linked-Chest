@@ -160,11 +160,6 @@ return function(chest_name, source, container)
         result=chest_name
     }
     entity.inventory_size=inv_size
-    entity.flags= 
-    {
-        "placeable-neutral", 
-        "player-creation"
-    }
     entity.circuit_wire_connection_points=steel_chest.circuit_wire_connection_point
     entity.circuit_connector_sprites=steel_chest.circuit_connector_spritess
     entity.circuit_wire_max_distance=steel_chest.circuit_wire_max_distance
@@ -184,22 +179,10 @@ return function(chest_name, source, container)
             scale=0.3
         }
     }
-    entity.gui_mode="none"
     entity.corpse=""
     entity.selecttable_in_game=true
     entity.collision_box={{-0.25,-0.25},{0.25,0.25}}
     entity.selection_box = {{-0.5,-0.5},{0.5,0.5}}
-    local logisticType="storage"
-    if container=="logistic-container" then
-        entity.type="logistic-container"
-        entity.logistic_mode = logisticType
-		entity.opened_duration = logistic_chest_opened_duration
-		if logisticType == "requester" or logisticType == "buffer" then
-			entity.logistic_slots_count = 25 + math.min(math.floor(unitSize*2.5),25)
-		elseif logisticType == "storage" then
-			entity.max_logistic_slots = 1
-		end
-    end
 
     local recipe=
     {

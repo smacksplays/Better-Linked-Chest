@@ -1,4 +1,3 @@
-local func_blueprint = require("util/blueprint")
 local mod_gui = require("mod-gui")
 local blc_entity_name="better-linked-chest"
 
@@ -6,8 +5,8 @@ script.on_event(defines.events.on_gui_opened , function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
     if event.entity==nil then return end
-
-    if event.entity.name == blc_entity_name then
+    if event.entity.name==blc_entity_name then
+        player.print(event.entity.type)
         global.blc_entity=event.entity
         local table_size=0
         for _ in pairs(global.name_id_table) do 
@@ -28,7 +27,7 @@ script.on_event(defines.events.on_gui_opened , function(event)
         end
         local first_free_id=getFirstFreeID()
         player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.left.blc_frame.id_textfield.text=""..first_free_id
+        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
     end
 end)
 
@@ -37,7 +36,7 @@ script.on_event(defines.events.on_gui_closed, function(event)
     if player==nil then return end
     if event.entity==nil then return end
 
-    if event.entity.name == blc_entity_name then
+    if event.entity.name==blc_entity_name then
         if player.gui.relative.blc_frame.blc_frame~=nil then
             player.gui.relative.blc_frame.name_dropdown.close_dropdown()
         end
@@ -222,50 +221,6 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(event)
     end
 end)
 
-script.on_event(defines.events.on_entity_settings_pasted, function(event)
-    if event.source~=nil and event.destination~=nil then
-        if event.source.name==blc_entity_name and event.destination.name==blc_entity_name then
-            event.destination.link_id=event.source.link_id
-        end
-    end
-end)
-
-script.on_event(defines.events.on_pre_build, function(event)
-    local player=game.get_player(event.player_index)
-    local surface=player.surface
-    local cursor=player.cursor_stack
-    local paste_position=event.position
-
-    if player.is_cursor_blueprint() then
-        local original_entities=player.get_blueprint_entities()
-        local original_tiles
-        if player.cursor_stack.valid_for_read==true and player.cursor_stack.is_blueprint then
-            original_tiles=player.cursor_stack.get_blueprint_tiles()
-        elseif player.cursor_stack.valid_for_read==true and player.cursor_stack.is_blueprint_book then
-            local active_index=player.cursor_stack.active_index
-            local items=player.cursor_stack.get_inventory(defines.inventory.item_main)
-            original_tiles=items[active_index].get_blueprint_tiles()
-        end
-        if type(original_entities)=="table" then
-            local contains_blc=false
-            for i,e in ipairs(original_entities) do
-                if e.name==blc_entity_name then
-                    contains_blc=true
-                end
-            end
-            if contains_blc==true then
-                local blueprint_entities=func_blueprint(original_entities, original_tiles, event, player)
-                for i,e in ipairs(blueprint_entities) do
-                    local entity = surface.find_entity(blc_entity_name, e.position)
-                    if entity~=nil then
-                        entity.link_id=e.link_id
-                    end
-                end
-            end
-        end
-    end
-end)
-
 script.on_event(defines.events.on_gui_elem_changed, function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
@@ -386,7 +341,7 @@ function getDropdownIndexByID(dropdown, id)
     end
     for i, item in ipairs(dropdown.items) do
         local value=global.name_id_table[name]
-        if localised_name_equal(name, value[2], item) then
+        if value~=nil and localised_name_equal(name, value[2], item) then
             return i
         end
     end
