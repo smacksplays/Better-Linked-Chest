@@ -455,7 +455,7 @@ function create_setup_gui(player, location)
             type="sprite-button",
             name="blc.close_button",
             style="frame_action_button",
-            tooltip={"blc.close-instruction"},
+            tooltip={"blc.close_instruction"},
             sprite="utility/close_white",
             hovered_sprite="utility/close_black",
             clicked_sprite="utility/close_black"
@@ -464,6 +464,7 @@ function create_setup_gui(player, location)
     location.blc_frame.add{
         type="drop-down",
         name="name_dropdown",
+        tooltip={"blc.name_dropdown_tooltip"},
         caption={"blc.name_dropdown_cap"}
     }
     location.blc_frame.add{
@@ -474,6 +475,7 @@ function create_setup_gui(player, location)
     location.blc_frame.add{
         type="button",
         name="remove_button",
+        tooltip={"blc.remove_button_tooltip"},
         caption={"blc.remove_button_cap"}
     }
     location.blc_frame.add{
@@ -483,11 +485,13 @@ function create_setup_gui(player, location)
     }
     location.blc_frame.add{
         type="textfield",
-        name="name_textfield"
+        name="name_textfield",
+        tooltip={"blc.name_textfield_tooltip"}
     }
     location.blc_frame.add{
         type="choose-elem-button",
         name="choose_elem_button",
+        tooltip={"blc.choose_elem_tooltip"},
         style="slot_button",
         elem_type="item"
     }
@@ -498,11 +502,13 @@ function create_setup_gui(player, location)
     }
     location.blc_frame.add{
         type="textfield",
-        name="id_textfield"
+        name="id_textfield",
+        tooltip={"blc.id_textfield_tooltip"}
     }
     location.blc_frame.add{
         type="button",
         name="add_button",
+        tooltip={"blc.add_button_tooltip"},
         caption={"blc.add_button_cap"}
     }
 end

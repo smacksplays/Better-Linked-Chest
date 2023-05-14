@@ -143,7 +143,7 @@ return function(chest_name, source, container)
 
     local item=util.table.deepcopy(data.raw["item"][source])
     item.name=chest_name
-    item.icon="__Better-Linked-Chest__/graphics/icons/"..chest_name.."-icon.png"
+    item.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
     item.icon_size=64
     item.icon_mipmaps=4
     item.subgroup="storage"
@@ -163,17 +163,17 @@ return function(chest_name, source, container)
     entity.circuit_wire_connection_points=steel_chest.circuit_wire_connection_point
     entity.circuit_connector_sprites=steel_chest.circuit_connector_spritess
     entity.circuit_wire_max_distance=steel_chest.circuit_wire_max_distance
-    entity.icon="__Better-Linked-Chest__/graphics/icons/"..chest_name.."-icon.png"
+    entity.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
     entity.icon_size=64
     entity.picture=
     {
-        filename="__Better-Linked-Chest__/graphics/entity/"..chest_name..".png",
+        filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
         width=128,
         height=128,
         scale=0.15,
         hr_version=
         {
-            filename="__Better-Linked-Chest__/graphics/entity/"..chest_name..".png",
+            filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
             width=128,
             height=128,
             scale=0.3
@@ -198,7 +198,7 @@ return function(chest_name, source, container)
     {
         type = "technology",
         name = chest_name,
-        icon = "__Better-Linked-Chest__/graphics/technology/"..chest_name..".png",
+        icon = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
         icon_size = 128,
         effects = { 
             { 
