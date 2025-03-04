@@ -4,4 +4,6 @@ if storage.name_id_table~=nil then
     game.print("Due to this your current list will be deleted!")
     game.print("Howeve this will not destory any chests you alredy placed.")
     storage.name_id_table=nil
+    storage.name_id_table={}
+    storage.name_id_table["player"]={}
 end

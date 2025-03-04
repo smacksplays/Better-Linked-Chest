@@ -23,7 +23,6 @@ script.on_event(defines.events.on_force_created, function(event)
 end)
 
 script.on_configuration_changed(function(event)
-    storage.name_id_table["player"]={}
 end)
 
 script.on_event(defines.events.on_gui_opened , function(event)
