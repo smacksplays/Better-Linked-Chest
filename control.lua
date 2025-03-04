@@ -23,9 +23,7 @@ script.on_event(defines.events.on_force_created, function(event)
 end)
 
 script.on_configuration_changed(function(event)
-    for i, player in pairs(game.players) do
-        create_blc_gui(player)
-    end
+    storage.name_id_table["player"]={}
 end)
 
 script.on_event(defines.events.on_gui_opened , function(event)
@@ -66,8 +64,8 @@ script.on_event(defines.events.on_gui_opened , function(event)
                 choose_elem_button_rel.elem_value=nil
             end
         else
-            storage.blc_entity.link_id=0
-            id_label_rel.caption="ID: 0"
+            storage.blc_entity.link_id=storage.blc_entity.link_id
+            id_label_rel.caption="ID: "..storage.blc_entity.link_id
             choose_elem_button_rel.elem_value=nil
         end
     end
