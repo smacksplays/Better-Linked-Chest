@@ -5,22 +5,22 @@ return function(chest_name, source, container)
 
     if crafting_cost=="easy" then
         blc_recipe = {
-            {"iron-plate", 20}
+            {type = "item", name = "iron-plate", amount = 20}
         }
     elseif crafting_cost=="medium" then
         blc_recipe = {
-            {"steel-chest", 10},
-            {"iron-plate", 100},
-            {"copper-plate", 100},
-            {"electronic-circuit", 50},
+            {type = "item", name = "steel-chest", amount = 10},
+            {type = "item", name = "iron-plate", amount = 100},
+            {type = "item", name = "copper-plate", amount = 100},
+            {type = "item", name = "electronic-circuit", amount = 50},
         }
     elseif crafting_cost=="hard" then
         blc_recipe = {
-            {"steel-chest", 20},
-            {"iron-plate", 100},
-            {"copper-plate", 100},
-            {"advanced-circuit", 50},
-            {"processing-unit", 10}
+            {type = "item", name = "steel-chest", amount = 20},
+            {type = "item", name = "iron-plate", amount = 100},
+            {type = "item", name = "copper-plate", amount = 100},
+            {type = "item", name = "advanced-circuit", amount = 50},
+            {type = "item", name = "processing-unit", amount = 10}
         }
     end
 
@@ -58,9 +58,6 @@ return function(chest_name, source, container)
         }
         blc_prerequisites=
         {
-            "logistics",
-            "fast-inserter",
-            "steel-processing",
             "logistic-science-pack"
         }
     elseif val=="chemical" then
@@ -73,8 +70,9 @@ return function(chest_name, source, container)
         }
         blc_prerequisites=
         {
-            "logistics-2",
-            "stack-inserter",
+            "logistics",
+            "electronics",
+            "steel-processing",
             "logistic-science-pack",
             "chemical-science-pack"
         }
@@ -89,9 +87,9 @@ return function(chest_name, source, container)
         }
         blc_prerequisites=
         {
-            "logistics-3",
-            "stack-inserter",
-            "advanced-electronics",
+            "logistics",
+            "electronics",
+            "steel-processing",
             "logistic-science-pack",
             "chemical-science-pack",
             "production-science-pack"
@@ -108,9 +106,9 @@ return function(chest_name, source, container)
         }
         blc_prerequisites=
         {
-            "logistics-3",
-            "stack-inserter",
-            "inserter-capacity-bonus-1",
+            "logistics",
+            "electronics",
+            "steel-processing",
             "logistic-science-pack",
             "chemical-science-pack",
             "production-science-pack",
@@ -129,14 +127,13 @@ return function(chest_name, source, container)
         }
         blc_prerequisites=
         {
-            "logistics-3",
-            "stack-inserter",
-            "inserter-capacity-bonus-1",
+            "logistics",
+            "electronics",
+            "steel-processing",
             "logistic-science-pack",
             "chemical-science-pack",
             "production-science-pack",
-            "utility-science-pack",
-            "space-science-pack"
+            "utility-science-pack"
         }
     end
     local steel_chest=table.deepcopy(data.raw["container"]["steel-chest"]) 
@@ -144,8 +141,6 @@ return function(chest_name, source, container)
     local item=util.table.deepcopy(data.raw["item"][source])
     item.name=chest_name
     item.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
-    item.icon_size=64
-    item.icon_mipmaps=4
     item.subgroup="storage"
     item.order="a[steel-chest]-a["..chest_name.."]"
     item.place_result=chest_name
@@ -163,20 +158,28 @@ return function(chest_name, source, container)
     entity.circuit_wire_connection_points=steel_chest.circuit_wire_connection_point
     entity.circuit_connector_sprites=steel_chest.circuit_connector_spritess
     entity.circuit_wire_max_distance=steel_chest.circuit_wire_max_distance
-    entity.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png"
-    entity.icon_size=64
+    entity.icon="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png"
     entity.picture=
     {
-        filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-        width=128,
-        height=128,
-        scale=0.15,
-        hr_version=
+        layers = 
         {
-            filename="__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-            width=128,
-            height=128,
-            scale=0.3
+            {
+                filename = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
+                priority = "extra-high",
+                width = 68,
+                height = 84,
+                shift = util.by_pixel(0, -3),
+                scale = 0.5
+            },
+            {
+                filename = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-shadow.png",
+                priority = "extra-high",
+                width = 116,
+                height = 48,
+                shift = util.by_pixel(12, 6),
+                draw_as_shadow = true,
+                scale = 0.5
+            }
         }
     }
     entity.gui_mode="all"
@@ -191,15 +194,17 @@ return function(chest_name, source, container)
         name=chest_name,
         enabled=false,
         ingredients=blc_recipe,
-        result=chest_name
+        results = {
+            {type = "item", name = chest_name, quality = "legendary", amount = 1}
+        }
     }
 
     local technology=
     {
         type = "technology",
         name = chest_name,
-        icon = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name..".png",
-        icon_size = 128,
+        icon = "__Better-Linked-Chest__/graphics/"..chest_name.."/"..chest_name.."-icon.png",
+        icon_size = 64,
         effects = { 
             { 
                 type="unlock-recipe", 

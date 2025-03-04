@@ -1,9 +1,9 @@
 {
   "name": "Better-Linked-Chest",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "Better Linked Chest",
   "author": "smack_plays",
-  "factorio_version": "1.1",
-  "dependencies": ["base >= 1.1"],
+  "factorio_version": "2.0",
+  "dependencies": ["base >= 2.0"],
   "description": "Linked chest with Dropdown to set the Chest inventory."
 }

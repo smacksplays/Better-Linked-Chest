@@ -1,162 +1,155 @@
 local mod_gui = require("mod-gui")
 local blc_entity_name="better-linked-chest"
+local reset_blc_gui=true
 
-script.on_event(defines.events.on_gui_opened , function(event)
-    local player=game.get_player(event.player_index)
-    if player==nil then return end
-    if event.entity==nil then return end
-    if event.entity.name==blc_entity_name then
-        global.blc_entity=event.entity
-        local table_size=0
-        for _ in pairs(global.name_id_table) do 
-            table_size=table_size+1
-        end
-        if table_size~=0 then
-            fillDropdown(nil, player)
-        end
-        if global.blc_entity.link_id==0 then
-            player.gui.relative.blc_frame.name_dropdown.selected_index=0
-            player.gui.relative.blc_frame.id_label.caption="ID: 0"
-        else
-            local index = getDropdownIndexByID(player.gui.relative.blc_frame.name_dropdown, global.blc_entity.link_id)
-            if index~=nil then
-                player.gui.relative.blc_frame.name_dropdown.selected_index=index
-            end
-            player.gui.relative.blc_frame.id_label.caption="ID: "..global.blc_entity.link_id
-        end
-        local first_free_id=getFirstFreeID()
-        player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
-    end
+local blc_frame_scr, name_dropdown_scr, id_label_scr, link_name_label_scr
+local name_textfield_scr, choose_elem_button_scr, link_id_label_scr
+local id_textfield_scr
+local blc_frame_rel, name_dropdown_rel, id_label_rel, link_name_label_rel
+local name_textfield_rel, choose_elem_button_rel, link_id_label_rel
+local id_textfield_rel
+
+script.on_init(function(event)
+    storage.name_id_table={}
+    storage.name_id_table["player"]={}
+end)
+  
+script.on_event(defines.events.on_player_created, function(event)
+    create_blc_gui(game.get_player(event.player_index))
 end)
 
-script.on_event(defines.events.on_gui_closed, function(event)
-    local player=game.get_player(event.player_index)
-    if player==nil then return end
-    if event.entity==nil then return end
-
-    if event.entity.name==blc_entity_name then
-        if player.gui.relative.blc_frame.blc_frame~=nil then
-            player.gui.relative.blc_frame.name_dropdown.close_dropdown()
-        end
-    end
+script.on_event(defines.events.on_force_created, function(event)
+    storage.name_id_table[event.force.name]={}
 end)
 
 script.on_configuration_changed(function(event)
     for i, player in pairs(game.players) do
         create_blc_gui(player)
     end
-  end)
+end)
 
-script.on_init(function(event)
-    global.name_id_table={}
-    for i, player in pairs(game.players) do
+script.on_event(defines.events.on_gui_opened , function(event)
+    local player=game.get_player(event.player_index)
+    if reset_blc_gui==true then
+        reset_blc_gui=false
         create_blc_gui(player)
+        game.print("GUI")
     end
-end)
-  
-script.on_event(defines.events.on_player_created, function(event)
-    create_blc_gui(game.get_player(event.player_index))
-end)
-  
-script.on_event(defines.events.on_player_joined_game, function(event)
-    create_blc_gui(game.get_player(event.player_index))
+    if player==nil then return end
+    if event.entity==nil then return end
+    if event.entity.name~=blc_entity_name then return end
+    
+    storage.blc_entity=event.entity
+    local table_size=0
+    for _ in pairs(storage.name_id_table[player.force.name]) do 
+        table_size=table_size+1
+    end
+    if table_size~=0 then
+        fillDropdown(nil, player)
+    end
+    if storage.blc_entity.link_id==0 then
+        name_dropdown_rel.selected_index=0
+        id_label_rel.caption="ID: 0"
+        name_textfield_rel.caption=""
+        choose_elem_button_rel.elem_value=nil
+    else
+        id_label_rel.caption="ID: "..storage.blc_entity.link_id
+        local selected_item=storage.name_id_table[player.force.name][storage.blc_entity.link_id]
+        if selected_item~=nil then
+            name,quality=string.match(selected_item, "(%a+-%a+) %((%a+)%)")
+            if name~=nil and quality~=nil then
+                elem_value={}
+                elem_value.name=name
+                elem_value.quality=quality
+                choose_elem_button_rel.elem_value=elem_value
+            else
+                choose_elem_button_rel.elem_value=nil
+            end
+        else
+            storage.blc_entity.link_id=0
+            id_label_rel.caption="ID: 0"
+            choose_elem_button_rel.elem_value=nil
+        end
+    end
+    local first_free_id=getFirstFreeID(player)
+    id_textfield_rel.text=""..first_free_id
+    id_textfield_scr.text=""..first_free_id
 end)
 
+script.on_event(defines.events.on_gui_closed, function(event)
+    local player=game.get_player(event.player_index)
+    if player==nil then return end
+    if event.entity==nil then return end
+    if event.entity.name~=blc_entity_name then return end
+    if name_dropdown_rel~=nil then name_dropdown_rel.close_dropdown() end
+end)
 
 script.on_event(defines.events.on_gui_click, function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
     local element=event.element
-
-    -- Sprite Button
-    if element.name=="blc_sprite_button" then
-        if player.gui.screen.blc_frame.visible then
-            player.gui.screen.blc_frame.visible=false
+    if element.name=="blc_sprite_button" then   -- Sprite Button
+        if blc_frame_scr.visible then
+            blc_frame_scr.visible=false
         else
-            player.gui.screen.blc_frame.visible=true
-            local first_free_id=getFirstFreeID()
-            player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
+            blc_frame_scr.visible=true
+            local first_free_id=getFirstFreeID(player)
+            id_textfield_scr.text=""..first_free_id
         end
-        return
-    end
-    if element.name=="blc.close_button" then
-        player.gui.screen.blc_frame.visible=false
-    end
-
-    -- Add Button
-    if element.name=="add_button" then
+    elseif element.name=="blc.close_button" then    -- Close Button
+        blc_frame_scr.visible=false
+    elseif element.name=="add_button" then  -- Add Button
         addNameID(element, player)
-        return
-    end
-    -- Remove Button
-    if element.name=="remove_button" then
+    elseif element.name=="remove_button" then   -- Remove Button
         removeNameID(element, player)
-        return
     end
 end)
 
 function addNameID(element, player)
     local blc_frame=element.parent
-    if isInteger(blc_frame.id_textfield.text) then 
-        -- Check if 0 < id < 4294967295 and name~=""
-        local id=tonumber(blc_frame.id_textfield.text)
-        local errors = {}
-        if id > 4294967295 then
-            table.insert(errors, {"blc.id_to_big_error"})
-        elseif id == 0 then
-            table.insert(errors, {"blc.id_zero_error"})
-        end
-        if blc_frame.name_textfield.text=="" then
-            table.insert(errors, {"blc.name_empty_error"})
-        end
-        
-        -- Check if id or name is alredy in name_id_table
-        for key,value in pairs(global.name_id_table) do
-            if value[1]==id then
-                table.insert(errors, {"blc.id_alredy_set_1_error", id, key})
-            end
-            if key==blc_frame.name_textfield.text then
-                table.insert(errors, {"blc.name_alredy_set_1_error", blc_frame.name_textfield.text, id})
-            end
-        end
-        if next(errors)~=nil then
-            for _,e in pairs(errors) do
-                player.print(e)
-            end
-            return
-        end
-
-        -- no errors => add to table
-        local str=game.item_prototypes[string.lower(blc_frame.name_textfield.text)]
-        if str~=nil then
-            -- Entries that have been added using the choose elem button
-            loc_string=localised_string(str, blc_frame.name_textfield.text)
-            global.name_id_table[blc_frame.name_textfield.text]={id, loc_string}
-        else
-            -- Entires with custom names
-            global.name_id_table[blc_frame.name_textfield.text]={id, blc_frame.name_textfield.text}
-        end
-        blc_frame.id_label.caption="ID: "..id
-        if  element.parent==player.gui.relative.blc_frame then
-            global.blc_entity.link_id=id
-        end
-        fillDropdown(element, player)
-        blc_frame.name_textfield.text=""
-        local first_free_id=getFirstFreeID()
-        player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
-        
-        local index=getDropdownIndexByID(blc_frame.name_dropdown, id)
-        blc_frame.name_dropdown.selected_index=index
-        
-        if blc_frame.choose_elem_button.elem_value~=nil then
-            blc_frame.choose_elem_button.elem_value=nil
-        end
-    else
+    if not isInteger(blc_frame.id_textfield.text) then 
         player.print({"blc.pos_int_error"})
         return 
     end
+
+    -- Check if 0 < id < 4294967295 and name~=""
+    local id=tonumber(blc_frame.id_textfield.text)
+    local errors = {}
+    if id > 4294967295 then
+        table.insert(errors, {"blc.id_to_big_error"})
+    elseif id == 0 then
+        table.insert(errors, {"blc.id_zero_error"})
+    end
+    if blc_frame.name_textfield.text=="" then
+        table.insert(errors, {"blc.name_empty_error"})
+    end
+    
+    -- Check if id or name is alredy in name_id_table
+    for key,value in pairs(storage.name_id_table[player.force.name]) do
+        if key==id then
+            table.insert(errors, {"blc.id_alredy_set_1_error", id, key})
+        end
+        if value==blc_frame.name_textfield.text then
+            table.insert(errors, {"blc.name_alredy_set_1_error", blc_frame.name_textfield.text, id})
+        end
+    end
+    if next(errors)~=nil then
+        for _,e in pairs(errors) do
+            player.print(e)
+        end
+        return
+    end
+
+    storage.name_id_table[player.force.name][id]=blc_frame.name_textfield.text
+    blc_frame.id_label.caption="ID: "..id
+    if  element.parent==blc_frame_rel then
+        storage.blc_entity.link_id=id
+    end
+    fillDropdown(element, player)
+    blc_frame.name_textfield.text=""
+    local first_free_id=getFirstFreeID(player)
+    id_textfield_rel.text=""..first_free_id
+    id_textfield_scr.text=""..first_free_id
 end
 
 function isInteger(str)
@@ -164,59 +157,59 @@ function isInteger(str)
 end
 
 function removeNameID(element, player)
+    local del_key
+    if element.parent.parent.name=="relative" then
+        del_key=string.match(id_label_rel.caption, "ID: (%d+)")
+    elseif element.parent.parent.name=="screen" then
+        del_key=string.match(id_label_scr.caption, "ID: (%d+)")
+    end
+    game.print(del_key)
+    temp={}
+    for key,value in pairs(storage.name_id_table[player.force.name]) do
+        if key~=tonumber(del_key) then
+            temp[key]=value
+            game.print(value..key..del_key)
+        end
+    end
+    storage.name_id_table[player.force.name]=temp
     local dropdown=element.parent.name_dropdown
     local selected_index=dropdown.selected_index
-    if selected_index>0 then
-        local selected_item=dropdown.get_item(selected_index)
-        -- get key for selected item
-        local selected_name
-        for key,value in pairs(global.name_id_table) do
-            if localised_name_equal(key, value[2], selected_item) or key==selected_item then 
-                selected_name=key
-                break 
-            end
-        end
-        -- remove from table
-        global.name_id_table[selected_name]=nil
-        -- set link id to 0 if needed
-        if element.parent==player.gui.relative.blc_frame then
-            global.blc_entity.link_id=0
-            player.gui.relative.blc_frame.id_label.caption="ID: 0"
-            -- correct visuals for left frame
-            local left_dropdown=player.gui.screen.blc_frame.name_dropdown
-            if left_dropdown.selected_index>0 then
-                left_selected_item=left_dropdown.get_item(left_dropdown.selected_index)
-                if localised_name_equal(selected_item, selected_item, left_selected_item) then
-                    player.gui.screen.blc_frame.id_label.caption="ID: 0"
-                end
-            end
-        end
-        -- reset dropdowns
-        fillDropdown(element, player)
-        local first_free_id=getFirstFreeID()
-        player.gui.relative.blc_frame.id_textfield.text=""..first_free_id
-        player.gui.screen.blc_frame.id_textfield.text=""..first_free_id
-    end
+    if selected_index<0 then return end
+
+    -- reset dropdowns
+    fillDropdown(element, player)
+    local first_free_id=getFirstFreeID(player)
+    id_textfield_rel.text=""..first_free_id
+    id_textfield_scr.text=""..first_free_id
 end
 
 script.on_event(defines.events.on_gui_selection_state_changed, function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
     local element=event.element
-    if element.name=="name_dropdown" then
-        local name_dropdown=element.parent.name_dropdown
-        local id_label=element.parent.id_label
-        local selected_index=element.selected_index
-        local selected_item=element.get_item(selected_index)
-        if selected_index>0 then
-            for key,value in pairs(global.name_id_table) do
-                local sel_id=getSelectedID(name_dropdown, player)
-                id_label.caption="ID: "..sel_id
-                if element.parent==player.gui.relative.blc_frame then
-                    if type(sel_id)=="number" then global.blc_entity.link_id=sel_id end
-                end
-            end
+    local choose_elem_button=element.parent.choose_elem_button
+    if element.name~="name_dropdown" then return end
+
+    local name_dropdown=element.parent.name_dropdown
+    local id_label=element.parent.id_label
+    local selected_index=element.selected_index
+    local selected_item=getRawEntityString(element.get_item(selected_index))
+
+    if selected_index<=0 then return end
+
+    for key,value in pairs(storage.name_id_table[player.force.name]) do
+        local sel_id=getSelectedID(name_dropdown, player)
+        id_label.caption="ID: "..sel_id
+        if element.parent==blc_frame_rel then
+            if type(sel_id)=="number" then storage.blc_entity.link_id=sel_id end
         end
+    end
+    if choose_elem_button~=nil and type(element.get_item(selected_index))=="table" then
+        name,quality=string.match(selected_item, "(%a+-%a+) %((%a+)%)")
+        elem_value={}
+        elem_value.name=name
+        elem_value.quality=quality
+        choose_elem_button.elem_value=elem_value
     end
 end)
 
@@ -224,104 +217,89 @@ script.on_event(defines.events.on_gui_elem_changed, function(event)
     local player=game.get_player(event.player_index)
     if player==nil then return end
     local element=event.element
-    if element.parent~=nil then
-        local name_textfield=element.parent.name_textfield
-        if name_textfield~=nil then
-            local name=element.elem_value
-            if name~=nil then
-                if type(name)=="table" then
-                    name=name.name
-                end
-                name=name:gsub("%f[%a].", string.upper)
-                name_textfield.text=name
-                --local first_free_id=getFirstFreeID()
-                --element.parent.id_textfield.text=""..first_free_id
-                for key,value in pairs(global.name_id_table) do
-                    if name==key then
-                        if element.parent==player.gui.relative.blc_frame then
-                            global.blc_entity.link_id=value[1]
-                        end
-                        fillDropdown(element, player, value[1])
-                        element.parent.id_label.caption="ID: "..value[1]
-                        element.elem_value=nil
-                    end
-                end
+    if element.parent==nil then return end
+
+    local name_textfield=element.parent.name_textfield
+    if name_textfield==nil then return end
+
+    local name=element.elem_value
+    if name==nil then return end
+    name_textfield.text=name.name.." ("..name.quality..")"
+    for key,value in pairs(storage.name_id_table[player.force.name]) do
+        if name.name.." ("..name.quality..")"==value then
+            if element.parent==blc_frame_rel then
+                storage.blc_entity.link_id=key
             end
+            fillDropdown(element, player, key)
+            element.parent.id_label.caption="ID: "..key
         end
     end
 end)
 
 
 function fillDropdown(element, player, left_id)
-    local rel_dropdown=player.gui.relative.blc_frame.name_dropdown
-    local left_dropdown=player.gui.screen.blc_frame.name_dropdown
-    rel_dropdown.selected_index=0
-    left_dropdown.selected_index=0
-    local sel_index = left_dropdown.selected_index
-    local old_selected
-    if sel_index>0 then
-        old_selected=left_dropdown.get_item(sel_index)
-    end
-    rel_dropdown.clear_items()
-    left_dropdown.clear_items()
-    local tkeys={}
+    name_dropdown_rel.selected_index=0
+    name_dropdown_scr.selected_index=0
+    name_dropdown_rel.clear_items()
+    name_dropdown_scr.clear_items()
+    local tvals={}
     local newTab={}
-    for k in pairs(global.name_id_table) do table.insert(tkeys, k) end
-    table.sort(tkeys)
-    for _,k in ipairs(tkeys) do newTab[k]=global.name_id_table[k] end
-    global.name_id_table=newTab
+    for k in pairs(storage.name_id_table[player.force.name]) do table.insert(tvals, k) end
+    table.sort(tvals)
+    for _,k in ipairs(tvals) do newTab[k]=storage.name_id_table[player.force.name][k] end
+    storage.name_id_table[player.force.name]=newTab
     local i = 1
     for key,value in pairs(newTab) do
-        if value[2]~=nil then
-            rel_dropdown.add_item(value[2])
-            left_dropdown.add_item(value[2])
-        else
-            rel_dropdown.add_item(key)
-            left_dropdown.add_item(key)
+        if value~=nil then
+            name,quality=string.match(value, "(%a+-%a+) %((%a+)%)")
+            if name~=nil and quality~=nil then
+                local new_value={"", {"entity-name."..name}," (",{"quality-name."..quality},")"}
+                name_dropdown_rel.add_item(new_value)
+                name_dropdown_scr.add_item(new_value)
+            else
+                name_dropdown_rel.add_item(value)
+                name_dropdown_scr.add_item(value)
+            end
         end
-        if element==nil then
-            if global.blc_entity.valid and global.blc_entity.link_id==value[1] then
-                rel_dropdown.selected_index=i
-            elseif left_id==value[1] then 
-                left_dropdown.selected_index=i 
-            end
-        else
-            if element.parent==player.gui.relative.blc_frame and global.blc_entity.valid and global.blc_entity.link_id==value[1] then
-                rel_dropdown.selected_index=i
-            elseif element.parent==player.gui.screen.blc_frame and left_id==value[1] then 
-                left_dropdown.selected_index=i 
-            end
+        if storage.blc_entity.valid and storage.blc_entity.link_id==key then
+            name_dropdown_rel.selected_index=i
+        elseif left_id==key then 
+            name_dropdown_scr.selected_index=i 
         end
         i=i+1
     end
 end
 
-function sortTableByName()
-    local tkeys={}
-    local newTab={}
-    for k in pairs(global.name_id_table) do table.insert(tkeys, k) end
-    table.sort(tkeys)
-    for _,k in ipairs(tkeys) do newTab[k]=global.name_id_table[k] end
-    global.name_id_table=newTab
-end
-
 function getSelectedID(dropdown, player)
     local selected_index=dropdown.selected_index
-    if selected_index>0 then
-        local selected_item=dropdown.get_item(selected_index)
-        for key,value in pairs(global.name_id_table) do
-            if localised_name_equal(key, value[2], selected_item)==true then return value[1] end
-        end
+    if selected_index<=0 then return end
+
+    local selected_item=getRawEntityString(dropdown.get_item(selected_index))
+    for key,value in pairs(storage.name_id_table[player.force.name]) do
+        if value==selected_item then return key end
     end
     return "--"
 end
 
-function getFirstFreeID()
-    if global.name_id_table==nil then return 1 end
+function getRawEntityString(selected_item)
+    local raw_string
+    if type(selected_item)=="table" then
+        local _,sel_name=string.match(selected_item[2][1], "(%a+-%a+).(%a+-%a+)")
+        local _,sel_quality=string.match(selected_item[4][1], "(%a+-%a+).(%a+)")
+        raw_string=sel_name.." ("..sel_quality..")"
+    else
+        raw_string=selected_item
+    end
+    
+    return raw_string
+end
+
+function getFirstFreeID(player)
+    if storage.name_id_table[player.force.name]==nil then return 1 end
     for i=1, 4294967295, 1 do
         isInTable=false
-        for key,value in pairs(global.name_id_table) do
-            if value[1]==i then
+        for key,value in pairs(storage.name_id_table[player.force.name]) do
+            if key==i then
                 isInTable=true
             end
         end
@@ -329,66 +307,6 @@ function getFirstFreeID()
             return i
         end
     end
-end
-
-function getDropdownIndexByID(dropdown, id)
-    local name
-    for key,value in pairs(global.name_id_table) do
-        if value[1]==id then
-            name=key
-        end
-    end
-    for i, item in ipairs(dropdown.items) do
-        local value=global.name_id_table[name]
-        if value~=nil and localised_name_equal(name, value[2], item) then
-            return i
-        end
-    end
-end
-
-function localised_string(str, key)
-    str=str.localised_name
-    if str[1]~=nil and str[2]==nil and str[3]==nil then
-        return {str[1]}
-    elseif str[1]~=nil and str[2]~=nil and str[3]==nil then
-        if type(str[2])=="table" then
-            return {str[1], {str[2][1]}}
-        end
-    elseif str[1]~=nil and str[2]~=nil and str[3]~=nil then
-        if type(str[3])=="table" then
-            return {str[1], {str[2][1]}, {str[3][1]}}
-        end
-    else
-        return str
-    end
-    return nil
-end
-
-function localised_name_equal(key, localised_name1, localised_name2)
-    if type(localised_name1)=="table" and type(localised_name2)=="table" then
-        if localised_name1[1]~=nil and localised_name1[2]==nil and localised_name1[3]==nil and localised_name2[1]~=nil and localised_name2[2]==nil and localised_name2[3]==nil then
-            if localised_name1[1]==localised_name2[1] then
-                return true
-            end
-        elseif localised_name1[1]~=nil and localised_name1[2]~=nil and localised_name1[3]==nil and localised_name2[1]~=nil and localised_name2[2]~=nil and localised_name2[3]==nil then
-            if localised_name1[1]==localised_name2[1] and localised_name1[2][1]==localised_name2[2][1] then
-                return true
-            end
-        elseif localised_name1[1]~=nil and localised_name1[2]~=nil and localised_name1[3]~=nil and localised_name2[1]~=nil and localised_name2[2]~=nil and localised_name2[3]~=nil then
-            if localised_name1[1]==localised_name2[1] and localised_name1[2][1]==localised_name2[2][1] and localised_name1[3][1]==localised_name2[3][1] then
-                return true
-            end
-        end
-    elseif localised_name1==nil and type(localised_name2)=="string" then
-        if key==localised_name2 then
-            return true
-        end
-    elseif type(localised_name1)=="string" and type(localised_name2)=="string" then
-        if localised_name1==localised_name2 then
-            return true
-        end
-    end
-    return false
 end
 
 function destory_blc_gui(player)
@@ -456,7 +374,7 @@ function create_setup_gui(player, location)
             name="blc.close_button",
             style="frame_action_button",
             tooltip={"blc.close_instruction"},
-            sprite="utility/close_white",
+            sprite="utility/close",
             hovered_sprite="utility/close_black",
             clicked_sprite="utility/close_black"
         }
@@ -493,7 +411,7 @@ function create_setup_gui(player, location)
         name="choose_elem_button",
         tooltip={"blc.choose_elem_tooltip"},
         style="slot_button",
-        elem_type="item"
+        elem_type="item-with-quality"
     }
     location.blc_frame.add{
         type="label",
@@ -518,5 +436,25 @@ function create_blc_gui(player)
     create_mod_gui(player)
     create_setup_gui(player, player.gui.relative)
     create_setup_gui(player, player.gui.screen)
+
+    blc_frame_rel=player.gui.relative.blc_frame
+    name_dropdown_rel=blc_frame_rel.name_dropdown
+    id_label_rel=blc_frame_rel.id_label
+    link_name_label_rel=blc_frame_rel.link_name_label
+    name_textfield_rel=blc_frame_rel.name_textfield
+    choose_elem_button_rel=blc_frame_rel.choose_elem_button
+    link_id_label_rel=blc_frame_rel.link_id_label
+    id_textfield_rel=blc_frame_rel.id_textfield
+
+    blc_frame_scr=player.gui.screen.blc_frame
+    name_dropdown_scr=blc_frame_scr.name_dropdown
+    id_label_scr=blc_frame_scr.id_label
+    link_name_label_scr=blc_frame_scr.link_name_label
+    name_textfield_scr=blc_frame_scr.name_textfield
+    choose_elem_button_scr=blc_frame_scr.choose_elem_button
+    link_id_label_scr=blc_frame_scr.link_id_label
+    id_textfield_scr=blc_frame_scr.id_textfield
+
     fillDropdown(nil, player)
+
 end
