@@ -23,6 +23,7 @@ script.on_event(defines.events.on_force_created, function(event)
 end)
 
 script.on_configuration_changed(function(event)
+    storage.name_id_table["player"]={}
 end)
 
 script.on_event(defines.events.on_gui_opened , function(event)
@@ -30,7 +31,6 @@ script.on_event(defines.events.on_gui_opened , function(event)
     if reset_blc_gui==true then
         reset_blc_gui=false
         create_blc_gui(player)
-        game.print("GUI")
     end
     if player==nil then return end
     if event.entity==nil then return end
@@ -53,7 +53,7 @@ script.on_event(defines.events.on_gui_opened , function(event)
         id_label_rel.caption="ID: "..storage.blc_entity.link_id
         local selected_item=storage.name_id_table[player.force.name][storage.blc_entity.link_id]
         if selected_item~=nil then
-            name,quality=string.match(selected_item, "(%a+-%a+) %((%a+)%)")
+            name,quality=string.match(selected_item, "(%a+.+) %((%a+)%)")
             if name~=nil and quality~=nil then
                 elem_value={}
                 elem_value.name=name
@@ -160,12 +160,10 @@ function removeNameID(element, player)
     elseif element.parent.parent.name=="screen" then
         del_key=string.match(id_label_scr.caption, "ID: (%d+)")
     end
-    game.print(del_key)
     temp={}
     for key,value in pairs(storage.name_id_table[player.force.name]) do
         if key~=tonumber(del_key) then
             temp[key]=value
-            game.print(value..key..del_key)
         end
     end
     storage.name_id_table[player.force.name]=temp
@@ -202,7 +200,7 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(event)
         end
     end
     if choose_elem_button~=nil and type(element.get_item(selected_index))=="table" then
-        name,quality=string.match(selected_item, "(%a+-%a+) %((%a+)%)")
+        name,quality=string.match(selected_item, "(%a+.+) %((%a+)%)")
         elem_value={}
         elem_value.name=name
         elem_value.quality=quality
@@ -248,9 +246,12 @@ function fillDropdown(element, player, left_id)
     local i = 1
     for key,value in pairs(newTab) do
         if value~=nil then
-            name,quality=string.match(value, "(%a+-%a+) %((%a+)%)")
+            name,quality=string.match(value, "(%a+.+) %((%a+)%)")
             if name~=nil and quality~=nil then
-                local new_value={"", {"entity-name."..name}," (",{"quality-name."..quality},")"}
+                local new_value={"?", 
+                {"", {"entity-name."..name}," (",{"quality-name."..quality},")"}, 
+                {"", {"item-name."..name}," (",{"quality-name."..quality},")"}, 
+                {"", {"equipment-name."..name}," (",{"quality-name."..quality},")"}}
                 name_dropdown_rel.add_item(new_value)
                 name_dropdown_scr.add_item(new_value)
             else
@@ -281,8 +282,8 @@ end
 function getRawEntityString(selected_item)
     local raw_string
     if type(selected_item)=="table" then
-        local _,sel_name=string.match(selected_item[2][1], "(%a+-%a+).(%a+-%a+)")
-        local _,sel_quality=string.match(selected_item[4][1], "(%a+-%a+).(%a+)")
+        local _,sel_name=string.match(selected_item[2][1], "(%a+-%a+).(%a+.+)")
+        local _,sel_quality=string.match(selected_item[4][1], "(%a+-%a+).(%a+.+)")
         raw_string=sel_name.." ("..sel_quality..")"
     else
         raw_string=selected_item
