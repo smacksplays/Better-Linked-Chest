@@ -188,7 +188,7 @@ script.on_event(defines.events.on_gui_selection_state_changed, function(event)
     local name_dropdown=element.parent.name_dropdown
     local id_label=element.parent.id_label
     local selected_index=element.selected_index
-    local selected_item=getRawEntityString(element.get_item(selected_index))
+    local selected_item=getRawEntityString(element.get_item(selected_index), player)
 
     if selected_index<=0 then return end
 
@@ -220,6 +220,10 @@ script.on_event(defines.events.on_gui_elem_changed, function(event)
     local name=element.elem_value
     if name==nil then return end
     name_textfield.text=name.name.." ("..name.quality..")"
+    name_textfield.caption={"?", 
+    {"", {"entity-name."..name.name}," (",{"quality-name."..name.quality},")"}, 
+    {"", {"item-name."..name.name}," (",{"quality-name."..name.quality},")"}, 
+    {"", {"equipment-name."..name.name}," (",{"quality-name."..name.quality},")"}}
     for key,value in pairs(storage.name_id_table[player.force.name]) do
         if name.name.." ("..name.quality..")"==value then
             if element.parent==blc_frame_rel then
@@ -272,18 +276,18 @@ function getSelectedID(dropdown, player)
     local selected_index=dropdown.selected_index
     if selected_index<=0 then return end
 
-    local selected_item=getRawEntityString(dropdown.get_item(selected_index))
+    local selected_item=getRawEntityString(dropdown.get_item(selected_index), player)
     for key,value in pairs(storage.name_id_table[player.force.name]) do
         if value==selected_item then return key end
     end
     return "--"
 end
 
-function getRawEntityString(selected_item)
+function getRawEntityString(selected_item, player)
     local raw_string
     if type(selected_item)=="table" then
-        local _,sel_name=string.match(selected_item[2][1], "(%a+-%a+).(%a+.+)")
-        local _,sel_quality=string.match(selected_item[4][1], "(%a+-%a+).(%a+.+)")
+        local _,sel_name=string.match(selected_item[2][2][1], "(%a+-%a+).(%a+.+)")
+        local _,sel_quality=string.match(selected_item[4][4][1], "(%a+-%a+).(%a+.+)")
         raw_string=sel_name.." ("..sel_quality..")"
     else
         raw_string=selected_item
